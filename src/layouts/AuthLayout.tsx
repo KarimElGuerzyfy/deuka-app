@@ -2,10 +2,10 @@ import { Outlet } from 'react-router-dom';
 
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen bg-[#EBF9FF] p-6 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-[url('/background.png')] bg-cover bg-center p-6 flex flex-col items-center justify-center">
       {/* The Logo sits at the top, consistent for all auth pages */}
       <div className="w-full max-w-sm mb-6">
-        <h1 className="text-2xl font-black text-black">DEUKA</h1>
+        <img src="/logo-auth.svg" alt="DEUKA" className="h-6" />
       </div>
 
       {/* The card container */}
