@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+// 1. Use 'import type' for Session
+// 2. Remove 'User' since you aren't using the type directly here
 import type { Session } from '@supabase/supabase-js';
 
-export function useAuth() {
+export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setLoading(false);
@@ -22,10 +22,16 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error("Logout failed:", error.message);
+  };
+
   return {
     session,
-    isAuthenticated: !!session,
     user: session?.user ?? null,
+    isAuthenticated: !!session,
     loading,
+    signOut,
   };
-}
+};

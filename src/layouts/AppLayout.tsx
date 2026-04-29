@@ -3,12 +3,10 @@ import Navbar from '../components/Navbar';
 
 export default function AppLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="h-dvh flex flex-col bg-app-bg overflow-hidden">
       <Navbar />
-      <main className="flex-1 container mx-auto p-4 flex items-center justify-center">
-        <div className="w-full max-w-4xl">
-          <Outlet />
-        </div>
+      <main className="flex-1 flex overflow-hidden justify-center">
+        <Outlet />
       </main>
     </div>
   );

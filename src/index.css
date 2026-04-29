@@ -3,4 +3,12 @@
 @theme {
   --color-primary: #4CC3FF;
   --color-brand-dark: #0E2029;
+  --color-app-bg: #F1F3F2;
+}
+
+/* Apply the theme variable to the root body */
+body {
+  background-color: var(--color-app-bg);
+  margin: 0;
+  padding: 0;
 }
