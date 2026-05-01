@@ -48,7 +48,8 @@ export default function Learning() {
             <CardStack />
           </div>
 
-          <div className="mt-6 sm:mt-12">
+          {/* Progress + Next — floating card on mobile only */}
+          <div className="mt-6 sm:mt-12 rounded-2xl sm:rounded-none bg-white sm:bg-transparent shadow-md sm:shadow-none border border-black/5 sm:border-0 px-4 py-4 sm:px-0 sm:py-0">
             <p className="mb-2 text-center text-[10px] font-bold text-[#1A1A1A]/40 uppercase tracking-[0.2em]">
               {wordsSeenInBucket} / 10
             </p>
@@ -58,20 +59,20 @@ export default function Learning() {
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-          </div>
 
-          <button
-            onClick={handleNext}
-            disabled={!allWordsSeen}
-            className={`shadow-deuka mt-8 sm:mt-10 mb-2 w-full max-w-xs mx-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm transition-all active:scale-95
-              ${allWordsSeen
-                ? 'bg-[#B2E5FF]/26 border border-[#24766F] text-black shadow-[0_0_12px_rgba(36,118,111,0.3)]'
-                : 'bg-[#B2E5FF]/26 border border-black/70 text-black opacity-30 cursor-not-allowed'
-              }`}
-          >
-            NEXT
-            <ArrowRight size={18} strokeWidth={2.5} />
-          </button>
+            <button
+              onClick={handleNext}
+              disabled={!allWordsSeen}
+              className={`shadow-deuka mt-4 sm:mt-8 mb-0 sm:mb-2 w-full max-w-xs mx-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm transition-all active:scale-95
+                ${allWordsSeen
+                  ? 'bg-[#B2E5FF]/26 border border-[#24766F] text-black shadow-[0_0_12px_rgba(36,118,111,0.3)]'
+                  : 'bg-[#B2E5FF]/26 border border-black/70 text-black opacity-30 cursor-not-allowed'
+                }`}
+            >
+              NEXT
+              <ArrowRight size={18} strokeWidth={2.5} />
+            </button>
+          </div>
 
         </div>
       </div>
