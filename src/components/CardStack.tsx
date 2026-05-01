@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { vocabularyService } from '../services/vocabularyService'
-// Removed RefreshCw as it was flagged as unused
-import { Languages, HelpCircle, Plus } from 'lucide-react'
+import { Languages, HelpCircle, RefreshCw } from 'lucide-react'
 
 type CardRole = 'german' | 'translation' | 'hint'
 
@@ -138,9 +137,9 @@ export default function CardStack() {
       </div>
 
       <div className="flex flex-col gap-3 w-full max-w-xs mx-auto lg:mx-0">
-        <button onClick={handleGenerate} className={btnBase}><Plus size={18} /> GENERATE</button>
-        <button onClick={handleTranslate} disabled={!localWord} className={`${btnBase} disabled:opacity-30`}><Languages size={18} /> TRANSLATE</button>
-        <button onClick={handleHint} disabled={!localWord} className={`${btnBase} disabled:opacity-30`}><HelpCircle size={18} /> HINT</button>
+        <button onClick={handleGenerate} className={btnBase}>GENERATE <RefreshCw size={18} strokeWidth={2.5} /></button>
+        <button onClick={handleTranslate} disabled={!localWord} className={`${btnBase} disabled:opacity-30`}>TRANSLATE <Languages size={18} strokeWidth={2.5} /></button>
+        <button onClick={handleHint} disabled={!localWord} className={`${btnBase} disabled:opacity-30`}>HINT <HelpCircle size={18} strokeWidth={2.5} /></button>
       </div>
     </div>
   )
