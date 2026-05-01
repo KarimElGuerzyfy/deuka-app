@@ -107,9 +107,9 @@ export default function CardStack() {
   const btnBase = "shadow-deuka flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#B2E5FF]/26 border border-black/70 text-black font-bold text-sm transition-all hover:bg-[#B2E5FF]/35 active:scale-95 cursor-pointer"
 
   return (
-    <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-8 w-full lg:justify-center">
-      <div className="w-full max-w-[320px] sm:max-w-[448px] mx-auto lg:mx-0">
-        <div className="relative w-full h-44 sm:h-52">
+    <div className="flex flex-col lg:flex-row items-center justify-center gap-12 md:gap-16 lg:gap-x-8 w-full">
+      <div className="w-full max-w-md mx-auto lg:mx-0 shrink-0">
+        <div className="relative w-full h-32 sm:h-52">
           {(['german', 'translation', 'hint'] as CardRole[]).map((role) => (
             <div
               key={role}
