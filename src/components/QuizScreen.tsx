@@ -1,30 +1,28 @@
-// src/components/QuizScreen.tsx
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
 
 export const QuizScreen = () => {
   const { 
     timeLeft, 
     isQuizActive, 
-    hasAnswered, 
     score, 
-    tick, 
-    startGame 
+    tickTimer, 
+    setQuizActive 
   } = useGameStore();
 
   // This hook handles the "5-second clock"
   useEffect(() => {
-    if (!isQuizActive || hasAnswered) return;
+    if (!isQuizActive) return;
 
     const interval = setInterval(() => {
-      tick();
+      tickTimer();
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isQuizActive, hasAnswered, tick]);
+  }, [isQuizActive, tickTimer]);
 
   if (!isQuizActive) {
-    return <button onClick={startGame}>Start Quiz</button>;
+    return <button onClick={() => setQuizActive(true)}>Start Quiz</button>;
   }
 
   return (
@@ -33,12 +31,6 @@ export const QuizScreen = () => {
       <div className={`text-4xl ${timeLeft <= 2 ? 'text-red-500' : 'text-black'}`}>
         Time Left: {timeLeft}s
       </div>
-      
-      {hasAnswered && (
-        <div className="mt-4 text-gray-500">
-          Waiting for next question...
-        </div>
-      )}
     </div>
   );
 };

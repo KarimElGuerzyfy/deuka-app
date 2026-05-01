@@ -158,4 +158,3 @@ export const a1: Centurion[] = [
   }
 ];
 
-export default a1;

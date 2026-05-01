@@ -25,7 +25,7 @@ export default function Navbar() {
   }, [])
 
   return (
-    <nav className="p-4 border-b bg-white border-black/10 sticky top-0 z-50 shadow-md">
+    <nav className="px-10 py-4 border-b bg-white border-black/10 sticky top-0 z-50 shadow-md">
       <div className="w-full max-w-7xl container mx-auto flex justify-between items-center">
         
         <Link to="/" onClick={() => setIsProfileOpen(false)}>

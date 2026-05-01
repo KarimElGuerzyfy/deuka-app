@@ -4,9 +4,9 @@
   --color-primary: #4CC3FF;
   --color-brand-dark: #0E2029;
   --color-app-bg: #F1F3F2;
+  --shadow-deuka: 0 4px 5px rgba(0, 0, 0, 0.5);
 }
 
-/* Apply the theme variable to the root body */
 body {
   background-color: var(--color-app-bg);
   margin: 0;

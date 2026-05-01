@@ -5,8 +5,8 @@ import { b2 } from './b2';
 import type { Level, Centurion } from '../types';
 
 export const vocabulary: Record<Level, Centurion[]> = {
-  A1: a1,
-  A2: a2,
-  B1: b1,
-  B2: b2,
+  'A1': a1,
+  'A2': a2,
+  'B1': b1,
+  'B2': b2,
 };

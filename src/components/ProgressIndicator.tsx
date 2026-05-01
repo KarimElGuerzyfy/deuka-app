@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function ProgressIndicator({ progress }: { progress: number }) {
   return (
     <div className="w-full bg-gray-200 rounded-full h-2.5">

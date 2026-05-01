@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Level } from '../types'
 import type { Word } from '../types/vocabulary'
+import { vocabularyService } from '../services/vocabularyService'
 
 type AppMode = 'learning' | 'quiz'
 type FeedbackState = 'idle' | 'correct' | 'incorrect'
@@ -17,6 +18,7 @@ interface GameState {
   // Learning Session
   currentWord: Word | null
   seenWordIds: string[]
+  wordIndexInBucket: number
 
   // Quiz Session
   feedbackState: FeedbackState
@@ -30,13 +32,14 @@ interface GameState {
   toggleLanguage: () => void
   submitAnswer: (isCorrect: boolean) => void
   markWordAsSeen: (id: string) => void
+  nextWord: () => void
   resetSession: () => void
   resetTimer: (time: number) => void
   tickTimer: () => void
   setQuizActive: (active: boolean) => void
 }
 
-export const useGameStore = create<GameState>((set) => ({
+export const useGameStore = create<GameState>((set, get) => ({
   // Initial State
   appMode: 'learning',
   currentLevel: 'A1',
@@ -45,6 +48,7 @@ export const useGameStore = create<GameState>((set) => ({
   displayLanguage: 'en',
   currentWord: null,
   seenWordIds: [],
+  wordIndexInBucket: 0,
   feedbackState: 'idle',
   score: 0,
   timeLeft: 5,
@@ -57,9 +61,11 @@ export const useGameStore = create<GameState>((set) => ({
     currentCenturionIndex: 0,
     currentBucketIndex: 0,
     seenWordIds: [],
+    wordIndexInBucket: 0,
     score: 0,
     feedbackState: 'idle',
-    appMode: 'learning'
+    appMode: 'learning',
+    currentWord: null
   }),
   toggleLanguage: () => set((state) => ({
     displayLanguage: state.displayLanguage === 'en' ? 'ar' : 'en'
@@ -71,6 +77,55 @@ export const useGameStore = create<GameState>((set) => ({
   markWordAsSeen: (id) => set((state) => ({
     seenWordIds: [...state.seenWordIds, id]
   })),
+  nextWord: () => {
+    const state = get();
+    try {
+      const bucket = vocabularyService.getBucket(state.currentLevel, state.currentCenturionIndex, state.currentBucketIndex);
+      
+      let nextWordIndex = state.currentWord ? state.wordIndexInBucket + 1 : 0;
+      let nextBucketIndex = state.currentBucketIndex;
+      let nextCenturionIndex = state.currentCenturionIndex;
+
+      if (nextWordIndex >= bucket.words.length) {
+        nextWordIndex = 0;
+        nextBucketIndex += 1;
+        
+        // Check if next bucket exists
+        try {
+          vocabularyService.getBucket(state.currentLevel, nextCenturionIndex, nextBucketIndex);
+        } catch {
+          nextBucketIndex = 0;
+          nextCenturionIndex += 1;
+          // If this fails, it's fine, the service will throw and we can handle it or loop back
+        }
+      }
+
+      const nextBucket = vocabularyService.getBucket(state.currentLevel, nextCenturionIndex, nextBucketIndex);
+      const nextWord = nextBucket.words[nextWordIndex];
+
+      set({
+        currentWord: nextWord,
+        wordIndexInBucket: nextWordIndex,
+        currentBucketIndex: nextBucketIndex,
+        currentCenturionIndex: nextCenturionIndex,
+        seenWordIds: [...state.seenWordIds, nextWord.id]
+      });
+    } catch (error) {
+      console.error("Error fetching next word:", error);
+      // Reset to beginning if we hit the end
+      set({
+        currentCenturionIndex: 0,
+        currentBucketIndex: 0,
+        wordIndexInBucket: 0,
+      });
+      // Try again once
+      const bucket = vocabularyService.getBucket(state.currentLevel, 0, 0);
+      set({
+        currentWord: bucket.words[0],
+        seenWordIds: [...state.seenWordIds, bucket.words[0].id]
+      });
+    }
+  },
   resetSession: () => set({
     seenWordIds: [],
     score: 0,

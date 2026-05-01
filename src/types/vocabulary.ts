@@ -1,4 +1,4 @@
-import { Category } from './index';
+import type { Category } from './index';
 
 export type Word = {
   id: string;
