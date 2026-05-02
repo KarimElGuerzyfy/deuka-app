@@ -78,7 +78,7 @@ and prevents guessing by elimination.
 | Routing | React Router DOM | `createBrowserRouter` for centralized route config |
 | Backend/Auth | Supabase | Auth + progress persistence without custom server |
 | Form Logic | React Hook Form + Zod | Schema-first validation, no manual error state |
-| State | Zustand (planned) | Lightweight global state for learning progress |
+| State | Zustand | Lightweight global state for learning progress |
 
 ---
 
@@ -147,6 +147,18 @@ bucket (1), and position (4). This makes progress tracking,
 filtering, and debugging significantly easier than opaque 
 numeric IDs.
 
+**Zustand for global state**
+Learning progress, current position in the curriculum, and 
+seen word tracking are managed via Zustand. Lightweight, 
+no boilerplate, and easy to persist to Supabase when the 
+backend integration phase begins.
+
+**Auth architecture**
+Session management is handled by a custom `useAuth` hook 
+built on Supabase's `onAuthStateChange`. User metadata 
+(display name) is stored directly in the Supabase Auth 
+schema, avoiding a separate profiles table for now.
+
 ---
 
 ## Getting Started
@@ -190,7 +202,10 @@ npm run dev
 |---|---|---|
 | 1 | Foundation — routing, auth, layouts | ✅ Complete |
 | 2 | Data layer — type system, A1 vocabulary | ✅ Complete |
-| 3 | Learning Screen — Generate/Translate/Hint loop | 🔲 In Progress |
-| 4 | Quiz Gate — timer, distractors, fail state | 🔲 Pending |
-| 5 | Supabase — progress persistence, profiles | 🔲 Pending |
-| 6 | Polish — responsive design, deploy to Vercel | 🔲 Pending |
+| 3 | Learning Screen — Generate/Translate/Hint loop | ✅ Complete |
+| 4 | Auth & Profile — useAuth hook, name/password update, session management | ✅ Complete |
+| 5 | Internationalization — language toggle, RTL groundwork for Arabic | ✅ Complete |
+| 6 | Quiz Gate — timer, distractors, fail state | 🔲 Pending |
+| 7 | Supabase — progress persistence, profiles | 🔲 Pending |
+| 8 | Polish — responsive design, deploy to Vercel | 🔲 In Progress |
+```
