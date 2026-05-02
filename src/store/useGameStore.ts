@@ -33,6 +33,7 @@ interface GameState {
   submitAnswer: (isCorrect: boolean) => void
   markWordAsSeen: (id: string) => void
   nextWord: () => void
+  advanceBucket: () => void
   resetSession: () => void
   resetTimer: (time: number) => void
   tickTimer: () => void
@@ -56,6 +57,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // Actions
   setAppMode: (mode) => set({ appMode: mode }),
+
   setLevel: (level) => set({ 
     currentLevel: level,
     currentCenturionIndex: 0,
@@ -67,16 +69,20 @@ export const useGameStore = create<GameState>((set, get) => ({
     appMode: 'learning',
     currentWord: null
   }),
+
   toggleLanguage: () => set((state) => ({
     displayLanguage: state.displayLanguage === 'en' ? 'ar' : 'en'
   })),
+
   submitAnswer: (isCorrect) => set((state) => ({
     feedbackState: isCorrect ? 'correct' : 'incorrect',
     score: isCorrect ? state.score + 1 : state.score,
   })),
+
   markWordAsSeen: (id) => set((state) => ({
     seenWordIds: [...state.seenWordIds, id]
   })),
+
   nextWord: () => {
     const state = get();
     try {
@@ -90,13 +96,11 @@ export const useGameStore = create<GameState>((set, get) => ({
         nextWordIndex = 0;
         nextBucketIndex += 1;
         
-        // Check if next bucket exists
         try {
           vocabularyService.getBucket(state.currentLevel, nextCenturionIndex, nextBucketIndex);
         } catch {
           nextBucketIndex = 0;
           nextCenturionIndex += 1;
-          // If this fails, it's fine, the service will throw and we can handle it or loop back
         }
       }
 
@@ -112,13 +116,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       });
     } catch (error) {
       console.error("Error fetching next word:", error);
-      // Reset to beginning if we hit the end
       set({
         currentCenturionIndex: 0,
         currentBucketIndex: 0,
         wordIndexInBucket: 0,
       });
-      // Try again once
       const bucket = vocabularyService.getBucket(state.currentLevel, 0, 0);
       set({
         currentWord: bucket.words[0],
@@ -126,6 +128,38 @@ export const useGameStore = create<GameState>((set, get) => ({
       });
     }
   },
+
+  advanceBucket: () => {
+    const state = get()
+    let nextBucket = state.currentBucketIndex + 1
+    let nextCenturion = state.currentCenturionIndex
+
+    try {
+      // Check if next bucket exists in current centurion
+      vocabularyService.getBucket(state.currentLevel, nextCenturion, nextBucket)
+    } catch {
+      // No more buckets → move to next centurion
+      nextBucket = 0
+      nextCenturion += 1
+      try {
+        vocabularyService.getBucket(state.currentLevel, nextCenturion, nextBucket)
+      } catch {
+        // No more centurions → loop back to start
+        nextCenturion = 0
+      }
+    }
+
+    set({
+      currentCenturionIndex: nextCenturion,
+      currentBucketIndex: nextBucket,
+      seenWordIds: [],
+      wordIndexInBucket: 0,
+      currentWord: null, // Forces a fresh start in Learning Mode
+      score: 0,
+      feedbackState: 'idle'
+    })
+  },
+
   resetSession: () => set({
     seenWordIds: [],
     score: 0,
@@ -134,9 +168,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     isQuizActive: false,
     appMode: 'learning'
   }),
+
   resetTimer: (time) => set({ timeLeft: time }),
+
   tickTimer: () => set((state) => ({
     timeLeft: Math.max(0, state.timeLeft - 1)
   })),
+
   setQuizActive: (active) => set({ isQuizActive: active }),
 }))

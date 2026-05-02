@@ -15,7 +15,6 @@ export default function Learning() {
     id.startsWith(`${currentLevel}-${currentCenturionIndex + 1}-${currentBucketIndex + 1}`)
   ).length
 
-  const progressPercent = (wordsSeenInBucket / 10) * 100
   const bucket = (() => {
     try { return vocabularyService.getBucket(currentLevel, currentCenturionIndex, currentBucketIndex) }
     catch { return null }

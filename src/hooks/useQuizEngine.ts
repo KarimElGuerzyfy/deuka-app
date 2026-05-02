@@ -1,12 +1,8 @@
-// src/hooks/useQuizEngine.ts
-
-import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGameStore } from '../store/useGameStore'
 import { vocabularyService } from '../services/vocabularyService'
 import type { Word, Bucket } from '../types/vocabulary'
-
-// --------------- Types ---------------
 
 interface QuizQuestion {
   word: Word
@@ -16,18 +12,13 @@ interface QuizQuestion {
 
 type QuizResult = 'pass' | 'fail' | null
 
-// --------------- Helper ---------------
-
 function buildQuestions(bucket: Bucket): QuizQuestion[] {
   return bucket.words.map((word) => {
-    // Now passes the full bucket object, not just { words }
     const distractors = vocabularyService.getDistractors(word, bucket)
     const options = [...distractors, word].sort(() => 0.5 - Math.random())
     return { word, options, correctId: word.id }
   })
 }
-
-// --------------- Hook ---------------
 
 export function useQuizEngine() {
   const navigate = useNavigate()
@@ -37,40 +28,28 @@ export function useQuizEngine() {
     currentBucketIndex,
     displayLanguage,
     timeLeft,
+    feedbackState,
     resetTimer,
     tickTimer,
     submitAnswer,
-    feedbackState,
     setAppMode,
-    resetSession,
+    advanceBucket,
   } = useGameStore()
 
-  // ---- Bucket & questions (stable references) ----
-  const bucket = useMemo(
-    () => vocabularyService.getBucket(currentLevel, currentCenturionIndex, currentBucketIndex),
-    [currentLevel, currentCenturionIndex, currentBucketIndex]
-  )
+  const questions = useMemo(() => {
+    const bucket = vocabularyService.getBucket(currentLevel, currentCenturionIndex, currentBucketIndex)
+    return buildQuestions(bucket)
+  }, [currentLevel, currentCenturionIndex, currentBucketIndex])
 
-  const questions = useMemo<QuizQuestion[]>(
-    () => buildQuestions(bucket),
-    [bucket]
-  )
-
-  // ---- Local UI state ----
   const [questionIndex, setQuestionIndex] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [quizResult, setQuizResult] = useState<QuizResult>(null)
-
-  // ---- Refs (never change, safe to omit from dependency arrays) ----
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const mountedRef = useRef(true)
-
-  const currentQuestion = questions[questionIndex]
+  
+  const currentQuestion = questions[questionIndex] || questions[questions.length - 1]
   const isRevealed = feedbackState !== 'idle'
-  const isCorrect = selectedId === currentQuestion.correctId
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // ---- Timer control (stable callbacks) ----
+  // FIX: Wrap in useCallback to satisfy dependency requirements
   const stopTimer = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
@@ -81,104 +60,85 @@ export function useQuizEngine() {
   const startTimer = useCallback(() => {
     stopTimer()
     resetTimer(5)
-    if (mountedRef.current) {
-      intervalRef.current = setInterval(() => {
-        if (mountedRef.current) tickTimer()
-      }, 1000)
-    }
+    intervalRef.current = setInterval(() => tickTimer(), 1000)
   }, [stopTimer, resetTimer, tickTimer])
 
-  // ---- Answer logic (defined early, wrapped in useCallback for stable reference) ----
-  const handleAnswer = useCallback(
-    (wordId: string | null) => {
-      stopTimer()
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+  const handleAnswer = useCallback((wordId: string | null) => {
+    if (feedbackState !== 'idle' || quizResult) return
+    
+    stopTimer()
+    setSelectedId(wordId)
+    
+    const isAnswerCorrect = wordId === currentQuestion.correctId
+    submitAnswer(isAnswerCorrect)
 
-      setSelectedId(wordId)
-      const isAnswerCorrect = wordId === currentQuestion.correctId
-      submitAnswer(isAnswerCorrect)
+    if (isAnswerCorrect) {
+      setTimeout(() => {
+        const nextIndex = questionIndex + 1
+        useGameStore.setState({ feedbackState: 'idle' })
 
-      if (isAnswerCorrect) {
-        timeoutRef.current = setTimeout(() => {
-          if (!mountedRef.current) return
-          const nextIndex = questionIndex + 1
-          if (nextIndex >= questions.length) {
-            setQuizResult('pass')
-          } else {
-            setQuestionIndex(nextIndex)
-            setSelectedId(null)
-          }
-        }, 900)
-      } else {
-        timeoutRef.current = setTimeout(() => {
-          if (!mountedRef.current) return
-          setQuizResult('fail')
-        }, 1200)
-      }
-    },
-    [currentQuestion, questionIndex, questions.length, stopTimer, submitAnswer]
-  )
+        if (nextIndex >= questions.length) {
+          setQuestionIndex(questions.length)
+          setQuizResult('pass')
+        } else {
+          setQuestionIndex(nextIndex)
+          setSelectedId(null)
+        }
+      }, 1000)
+    } else {
+      setTimeout(() => setQuizResult('fail'), 1500)
+    }
+  }, [feedbackState, quizResult, currentQuestion.correctId, submitAnswer, stopTimer, questionIndex, questions.length])
 
-  // ---- Side effects with correct dependencies ----
-
-  // Start timer when a new question appears and not in feedback
+  // FIX: Added all missing dependencies
   useEffect(() => {
-    if (!quizResult && feedbackState === 'idle') {
+    if (feedbackState === 'idle' && !quizResult) {
       startTimer()
+    } else {
+      stopTimer()
     }
     return () => stopTimer()
-  }, [questionIndex, feedbackState, quizResult, startTimer, stopTimer])
+  }, [feedbackState, quizResult, questionIndex, startTimer, stopTimer])
 
-  // Handle time‑out – now DEFERRED to avoid synchronous setState in effect
+  // FIX: Use setTimeout(0) to prevent cascading render error
   useEffect(() => {
     if (timeLeft === 0 && feedbackState === 'idle' && !quizResult) {
-      stopTimer()
-      // Asynchronously call handleAnswer to satisfy React Compiler
-      const timeoutId = setTimeout(() => {
-        if (mountedRef.current) handleAnswer(null)
-      }, 0)
-      return () => clearTimeout(timeoutId)
+      const defer = setTimeout(() => handleAnswer(null), 0)
+      return () => clearTimeout(defer)
     }
-  }, [timeLeft, feedbackState, quizResult, stopTimer, handleAnswer])
+  }, [timeLeft, feedbackState, quizResult, handleAnswer])
 
-  // Final cleanup on unmount
+  // FIX: Added missing dependencies for navigation
   useEffect(() => {
-    return () => {
-      mountedRef.current = false
-      stopTimer()
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    if (quizResult === 'pass') {
+      const timer = setTimeout(() => {
+        advanceBucket()
+        setAppMode('learning')
+        navigate('/')
+      }, 2500)
+      return () => clearTimeout(timer)
     }
-  }, [stopTimer])
 
-  // ---- Navigation helpers (stable) ----
-  const handleRetry = useCallback(() => {
-    setAppMode('learning')
-    navigate('/')
-  }, [setAppMode, navigate])
+    if (quizResult === 'fail') {
+      const timer = setTimeout(() => {
+        setAppMode('learning')
+        navigate('/')
+      }, 2500)
+      return () => clearTimeout(timer)
+    }
+  }, [quizResult, advanceBucket, setAppMode, navigate])
 
-  const handleContinue = useCallback(() => {
-    resetSession()
-    setAppMode('learning')
-    navigate('/')
-  }, [resetSession, setAppMode, navigate])
-
-  // ---- Public API ----
   return {
     currentQuestion,
     questionsCount: questions.length,
     questionIndex,
     selectedId,
     isRevealed,
-    isCorrect,
+    isCorrect: selectedId === currentQuestion.correctId,
     quizResult,
     handleAnswer,
-    handleRetry,
-    handleContinue,
-    progressPercent: (questionIndex / questions.length) * 100,
     timeLeft,
-    currentLevel,
-    currentCenturionIndex,
-    currentBucketIndex,
     displayLanguage,
+    progressPercent: (questionIndex / questions.length) * 100
   }
 }
