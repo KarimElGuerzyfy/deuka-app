@@ -66,11 +66,11 @@ export function useQuizEngine() {
     intervalRef.current = setInterval(() => tickTimer(), 1000)
   }, [stopTimer, resetTimer, tickTimer])
 
-  const handleRetry = useCallback(() => {
-    useGameStore.setState({ feedbackState: 'idle', timeLeft: 5 })
-    setAppMode('learning')
-    navigate('/', { replace: true })
-  }, [setAppMode, navigate])
+const handleRetry = useCallback(() => {
+  useGameStore.setState({ feedbackState: 'idle', timeLeft: 5, score: 0 })
+  setAppMode('learning')
+  navigate('/', { replace: true })
+}, [setAppMode, navigate])
 
   const handleContinue = useCallback(() => {
     advanceBucket()
