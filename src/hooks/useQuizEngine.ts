@@ -6,6 +6,8 @@ import { useGameStore } from '../store/useGameStore'
 import { vocabularyService } from '../services/vocabularyService'
 import type { Word, Bucket } from '../types/vocabulary'
 
+// --------------- Types ---------------
+
 interface QuizQuestion {
   word: Word
   options: Word[]
@@ -14,6 +16,8 @@ interface QuizQuestion {
 
 type QuizResult = 'pass' | 'fail' | null
 
+// --------------- Helper (stable, no hooks) ---------------
+
 function buildQuestions(bucket: Bucket): QuizQuestion[] {
   return bucket.words.map((word) => {
     const distractors = vocabularyService.getDistractors(word, bucket)
@@ -21,6 +25,8 @@ function buildQuestions(bucket: Bucket): QuizQuestion[] {
     return { word, options, correctId: word.id }
   })
 }
+
+// --------------- Hook ---------------
 
 export function useQuizEngine() {
   const navigate = useNavigate()
@@ -36,14 +42,15 @@ export function useQuizEngine() {
     submitAnswer,
     setAppMode,
     advanceBucket,
-    resetSession, 
   } = useGameStore()
 
+  // Stable questions – only recalculated when the bucket changes
   const questions = useMemo(() => {
     const bucket = vocabularyService.getBucket(currentLevel, currentCenturionIndex, currentBucketIndex)
     return buildQuestions(bucket)
   }, [currentLevel, currentCenturionIndex, currentBucketIndex])
 
+  // Local UI state
   const [questionIndex, setQuestionIndex] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [quizResult, setQuizResult] = useState<QuizResult>(null)
@@ -52,6 +59,8 @@ export function useQuizEngine() {
   const isRevealed = feedbackState !== 'idle'
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const mountedRef = useRef(true)
+
+  // ---- Timer Logic ----
 
   const stopTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -65,6 +74,31 @@ export function useQuizEngine() {
     resetTimer(5)
     intervalRef.current = setInterval(() => tickTimer(), 1000)
   }, [stopTimer, resetTimer, tickTimer])
+
+  // ---- Stable Navigation Handlers ----
+
+  const handleRetry = useCallback(() => {
+    // Manually clear UI blockers but preserve progress
+    useGameStore.setState({ 
+      feedbackState: 'idle', 
+      timeLeft: 5 
+    })
+    setAppMode('learning')
+    navigate('/', { replace: true })
+  }, [setAppMode, navigate])
+
+  const handleContinue = useCallback(() => {
+    // Advance progress only on pass
+    advanceBucket()
+    useGameStore.setState({ 
+      feedbackState: 'idle', 
+      timeLeft: 5 
+    })
+    setAppMode('learning')
+    navigate('/', { replace: true })
+  }, [advanceBucket, setAppMode, navigate])
+
+  // ---- Answer Handling ----
 
   const handleAnswer = useCallback((wordId: string | null) => {
     if (feedbackState !== 'idle' || quizResult) return
@@ -80,7 +114,7 @@ export function useQuizEngine() {
         if (!mountedRef.current) return
         
         const nextIndex = questionIndex + 1
-        // CRITICAL: Reset feedbackState to 'idle' so the next question can start
+        // Reset feedback locally for the next question
         useGameStore.setState({ feedbackState: 'idle' })
 
         if (nextIndex >= questions.length) {
@@ -100,7 +134,9 @@ export function useQuizEngine() {
     }
   }, [feedbackState, quizResult, currentQuestion.correctId, submitAnswer, stopTimer, questionIndex, questions.length])
 
-  // EFFECT: Timer Management
+  // ---- Effects ----
+
+  // 1. Timer Control
   useEffect(() => {
     if (feedbackState === 'idle' && !quizResult) {
       startTimer()
@@ -110,7 +146,7 @@ export function useQuizEngine() {
     return () => stopTimer()
   }, [feedbackState, quizResult, questionIndex, startTimer, stopTimer])
 
-  // EFFECT: Timeout
+  // 2. Timeout handling
   useEffect(() => {
     if (timeLeft === 0 && feedbackState === 'idle' && !quizResult) {
       const defer = setTimeout(() => handleAnswer(null), 0)
@@ -118,39 +154,40 @@ export function useQuizEngine() {
     }
   }, [timeLeft, feedbackState, quizResult, handleAnswer])
 
-  // EFFECT: Navigation (Logic simplified to prevent blocking)
+  // 3. Auto-Navigation observer
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>
 
     if (quizResult === 'pass') {
       timer = setTimeout(() => {
-        advanceBucket()
-        setAppMode('learning')
-        navigate('/', { replace: true })
+        if (mountedRef.current) handleContinue()
       }, 2000)
     } else if (quizResult === 'fail') {
       timer = setTimeout(() => {
-        setAppMode('learning')
-        navigate('/', { replace: true })
+        if (mountedRef.current) handleRetry()
       }, 2000)
     }
 
     return () => {
       if (timer) clearTimeout(timer)
     }
-  }, [quizResult, advanceBucket, setAppMode, navigate])
+  }, [quizResult, handleContinue, handleRetry])
 
-  // EFFECT: Cleanup on Unmount (The ONLY place where resetSession should run)
+  // 4. Cleanup on Unmount (Hard UI Reset)
   useEffect(() => {
     mountedRef.current = true
     return () => {
       mountedRef.current = false
       stopTimer()
-      // This ensures the store is clean for the NEXT time the user enters
-      resetSession()
+      // Purge UI state so re-entry is fresh, but keep progression
+      useGameStore.setState({ 
+        feedbackState: 'idle', 
+        timeLeft: 5 
+      })
     }
-  }, [stopTimer, resetSession])
+  }, [stopTimer])
 
+  // ---- Public API ----
   return {
     currentQuestion,
     questionsCount: questions.length,
