@@ -5,7 +5,7 @@
   --color-brand-dark: #0E2029;
   --color-app-bg: #F1F3F2;
   --shadow-deuka: 0 4px 5px rgba(0, 0, 0, 0.5);
-
+  --color-brand-green: #24766F;
   --animate-fade-in: fadeIn 0.15s ease-in forwards;
 
   @keyframes fadeIn {

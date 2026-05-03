@@ -155,7 +155,7 @@ export function useQuizEngine() {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>
     if (quizResult === 'pass') {
-      timer = setTimeout(() => { if (mountedRef.current) handleContinue() }, 2500)
+      timer = setTimeout(() => { if (mountedRef.current) handleContinue() }, 1300)
     } else if (quizResult === 'fail') {
       timer = setTimeout(() => { if (mountedRef.current) handleRetry() }, 2500)
     }

@@ -1,3 +1,4 @@
+import { Timer } from 'lucide-react'
 interface TimerPillProps {
   timeLeft: number
 }
@@ -11,32 +12,28 @@ export default function TimerPill({ timeLeft }: TimerPillProps) {
 
   return (
     <div
-      className="flex items-center gap-2 rounded-lg border transition-colors duration-300"
+      className="flex items-center rounded-lg border transition-colors duration-300"
       style={{
         background: isUrgent ? '#FEE2E2' : '#E5EEFF',
         borderColor: isUrgent ? '#FCA5A5' : '#C2C7CF',
         padding: '8px 16px',
         boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.05)',
+        gap: '7.99px',
       }}
     >
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={isUrgent ? '#EF4444' : '#1A1A1A'}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
+        <Timer
+          size={20}
+          strokeWidth={2.5}
+          color={isUrgent ? '#EF4444' : '#003453'}
+        />
       <span
-        className="text-sm font-medium tabular-nums"
+        className="tabular-nums"
         style={{
           fontFamily: "'Space Mono', monospace",
-          color: isUrgent ? '#EF4444' : '#1A1A1A',
+          fontSize: '20px',
+          fontWeight: 700,
+          lineHeight: '33.6px',
+          color: isUrgent ? '#EF4444' : '#003453',
         }}
       >
         {formatted}
