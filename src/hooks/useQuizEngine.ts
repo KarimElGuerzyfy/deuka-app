@@ -12,7 +12,7 @@ interface QuizQuestion {
   correctId: string
 }
 
-type QuizResult = 'pass' | 'fail' | null
+type QuizResult = 'pass' | 'fail' | 'level-complete' | null
 
 function buildQuestions(bucket: Bucket): QuizQuestion[] {
   return bucket.words.map((word) => {
@@ -31,11 +31,13 @@ export function useQuizEngine() {
     displayLanguage,
     timeLeft,
     feedbackState,
+    // Keep levelComplete here only if you need to react to it in the UI
     resetTimer,
     tickTimer,
     submitAnswer,
     setAppMode,
     advanceBucket,
+    clearLevelComplete,
   } = useGameStore()
 
   const questions = useMemo(() => {
@@ -66,11 +68,11 @@ export function useQuizEngine() {
     intervalRef.current = setInterval(() => tickTimer(), 1000)
   }, [stopTimer, resetTimer, tickTimer])
 
-const handleRetry = useCallback(() => {
-  useGameStore.setState({ feedbackState: 'idle', timeLeft: 5, score: 0 })
-  setAppMode('learning')
-  navigate('/', { replace: true })
-}, [setAppMode, navigate])
+  const handleRetry = useCallback(() => {
+    useGameStore.setState({ feedbackState: 'idle', timeLeft: 5, score: 0 })
+    setAppMode('learning')
+    navigate('/', { replace: true })
+  }, [setAppMode, navigate])
 
   const handleContinue = useCallback(() => {
     advanceBucket()
@@ -92,11 +94,25 @@ const handleRetry = useCallback(() => {
       setTimeout(() => {
         if (!mountedRef.current) return
         const nextIndex = questionIndex + 1
+        
+        // Reset feedback locally
         useGameStore.setState({ feedbackState: 'idle' })
 
         if (nextIndex >= questions.length) {
           setQuestionIndex(questions.length)
-          setQuizResult('pass')
+          
+          // 1. Trigger the move in the store
+          advanceBucket()
+          
+          // 2. CRITICAL: Read the NEW state directly from the store snapshot
+          // This avoids the stale closure of the 'levelComplete' variable
+          const isLevelDone = useGameStore.getState().levelComplete
+          
+          if (isLevelDone) {
+            setQuizResult('level-complete')
+          } else {
+            setQuizResult('pass')
+          }
         } else {
           setQuestionIndex(nextIndex)
           setSelectedId(null)
@@ -107,7 +123,6 @@ const handleRetry = useCallback(() => {
         if (!mountedRef.current) return
         stopTimer()
         setQuizResult('fail')
-        // Differentiate between timeout and wrong answer
         setStatusMessage(
           wordId === null
             ? "Time's up — review the bucket and try again"
@@ -115,8 +130,10 @@ const handleRetry = useCallback(() => {
         )
       }, 1500)
     }
-  }, [feedbackState, quizResult, currentQuestion.correctId, submitAnswer, stopTimer, questionIndex, questions.length])
+    // Note: levelComplete removed from deps to avoid unnecessary re-runs
+  }, [feedbackState, quizResult, currentQuestion.correctId, submitAnswer, stopTimer, questionIndex, questions.length, advanceBucket])
 
+  // EFFECT: Timer Control
   useEffect(() => {
     if (feedbackState === 'idle' && !quizResult) {
       startTimer()
@@ -126,6 +143,7 @@ const handleRetry = useCallback(() => {
     return () => stopTimer()
   }, [feedbackState, quizResult, questionIndex, startTimer, stopTimer])
 
+  // EFFECT: Auto-timeout
   useEffect(() => {
     if (timeLeft === 0 && feedbackState === 'idle' && !quizResult) {
       const defer = setTimeout(() => handleAnswer(null), 0)
@@ -133,6 +151,7 @@ const handleRetry = useCallback(() => {
     }
   }, [timeLeft, feedbackState, quizResult, handleAnswer])
 
+  // EFFECT: Success/Fail Navigation
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>
     if (quizResult === 'pass') {
@@ -143,6 +162,7 @@ const handleRetry = useCallback(() => {
     return () => { if (timer) clearTimeout(timer) }
   }, [quizResult, handleContinue, handleRetry])
 
+  // EFFECT: Cleanup on Unmount
   useEffect(() => {
     mountedRef.current = true
     return () => {
@@ -151,6 +171,12 @@ const handleRetry = useCallback(() => {
       useGameStore.setState({ feedbackState: 'idle', timeLeft: 5 })
     }
   }, [stopTimer])
+
+  const handleLevelContinue = useCallback(() => {
+    clearLevelComplete()
+    setAppMode('learning')
+    navigate('/', { replace: true })
+  }, [clearLevelComplete, setAppMode, navigate])
 
   return {
     currentQuestion,
@@ -162,8 +188,10 @@ const handleRetry = useCallback(() => {
     quizResult,
     statusMessage,
     handleAnswer,
+    handleLevelContinue,
     timeLeft,
     displayLanguage,
+    currentLevel,
     progressPercent: (questionIndex / questions.length) * 100,
   }
 }
