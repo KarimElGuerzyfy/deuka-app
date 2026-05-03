@@ -1,3 +1,5 @@
+// src/hooks/useQuizEngine.ts
+
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGameStore } from '../store/useGameStore'
@@ -34,6 +36,7 @@ export function useQuizEngine() {
     submitAnswer,
     setAppMode,
     advanceBucket,
+    resetSession, 
   } = useGameStore()
 
   const questions = useMemo(() => {
@@ -48,8 +51,8 @@ export function useQuizEngine() {
   const currentQuestion = questions[questionIndex] || questions[questions.length - 1]
   const isRevealed = feedbackState !== 'idle'
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const mountedRef = useRef(true)
 
-  // FIX: Wrap in useCallback to satisfy dependency requirements
   const stopTimer = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
@@ -74,7 +77,10 @@ export function useQuizEngine() {
 
     if (isAnswerCorrect) {
       setTimeout(() => {
+        if (!mountedRef.current) return
+        
         const nextIndex = questionIndex + 1
+        // CRITICAL: Reset feedbackState to 'idle' so the next question can start
         useGameStore.setState({ feedbackState: 'idle' })
 
         if (nextIndex >= questions.length) {
@@ -86,11 +92,15 @@ export function useQuizEngine() {
         }
       }, 1000)
     } else {
-      setTimeout(() => setQuizResult('fail'), 1500)
+      setTimeout(() => {
+        if (!mountedRef.current) return
+        stopTimer()
+        setQuizResult('fail')
+      }, 1500)
     }
   }, [feedbackState, quizResult, currentQuestion.correctId, submitAnswer, stopTimer, questionIndex, questions.length])
 
-  // FIX: Added all missing dependencies
+  // EFFECT: Timer Management
   useEffect(() => {
     if (feedbackState === 'idle' && !quizResult) {
       startTimer()
@@ -100,7 +110,7 @@ export function useQuizEngine() {
     return () => stopTimer()
   }, [feedbackState, quizResult, questionIndex, startTimer, stopTimer])
 
-  // FIX: Use setTimeout(0) to prevent cascading render error
+  // EFFECT: Timeout
   useEffect(() => {
     if (timeLeft === 0 && feedbackState === 'idle' && !quizResult) {
       const defer = setTimeout(() => handleAnswer(null), 0)
@@ -108,25 +118,38 @@ export function useQuizEngine() {
     }
   }, [timeLeft, feedbackState, quizResult, handleAnswer])
 
-  // FIX: Added missing dependencies for navigation
+  // EFFECT: Navigation (Logic simplified to prevent blocking)
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>
+
     if (quizResult === 'pass') {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         advanceBucket()
         setAppMode('learning')
-        navigate('/')
-      }, 2500)
-      return () => clearTimeout(timer)
+        navigate('/', { replace: true })
+      }, 2000)
+    } else if (quizResult === 'fail') {
+      timer = setTimeout(() => {
+        setAppMode('learning')
+        navigate('/', { replace: true })
+      }, 2000)
     }
 
-    if (quizResult === 'fail') {
-      const timer = setTimeout(() => {
-        setAppMode('learning')
-        navigate('/')
-      }, 2500)
-      return () => clearTimeout(timer)
+    return () => {
+      if (timer) clearTimeout(timer)
     }
   }, [quizResult, advanceBucket, setAppMode, navigate])
+
+  // EFFECT: Cleanup on Unmount (The ONLY place where resetSession should run)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      stopTimer()
+      // This ensures the store is clean for the NEXT time the user enters
+      resetSession()
+    }
+  }, [stopTimer, resetSession])
 
   return {
     currentQuestion,
