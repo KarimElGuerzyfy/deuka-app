@@ -6,6 +6,7 @@ import TimerPill from '../components/TimerPill'
 import type { Word } from '../types/vocabulary'
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D']
+const FONT_SERIF = "'Cormorant Garamond', serif"
 
 // --- OptionButton Component ---
 interface OptionButtonProps {
@@ -18,30 +19,60 @@ interface OptionButtonProps {
 }
 
 function OptionButton({ word, label, displayLanguage, optionState, disabled, onClick }: OptionButtonProps) {
-  const baseStyles = "relative flex items-center w-full p-4 rounded-xl border-2 transition-all duration-200 text-left"
-  
-  const stateStyles = {
-    idle: "border-black/5 bg-white hover:border-black/20",
-    correct: "border-green-500 bg-green-50 text-green-900",
-    wrong: "border-red-500 bg-red-50 text-red-900"
-  }
+  const containerStyle: React.CSSProperties = (() => {
+    switch (optionState) {
+      case 'correct':
+        return {
+          background: '#91D5CF',
+          borderColor: 'rgba(51,51,0,0.7)',
+          boxShadow: '0px 2.99px 2.99px 0px rgba(0,0,0,0.25)',
+        }
+      case 'wrong':
+        return {
+          background: '#FFCCCC',
+          borderColor: 'rgba(51,51,0,0.7)',
+          boxShadow: '0px 2.99px 2.99px 0px rgba(0,0,0,0.25)',
+        }
+      default:
+        return {
+          background: 'rgba(178,229,255,0.26)',
+          borderColor: 'rgba(51,51,0,0.7)',
+          boxShadow: '0px 2.99px 2.99px 0px rgba(0,0,0,0.25)',
+        }
+    }
+  })()
+
+  const labelBg =
+    optionState === 'correct' ? '#24766F'
+    : optionState === 'wrong' ? '#EF4444'
+    : '#1A1A1A'
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`${baseStyles} ${stateStyles[optionState]}`}
+      className={`w-full flex items-center justify-between rounded-[18px] border-[0.75px] transition-all duration-300 ${
+        !disabled ? 'active:scale-[0.98] cursor-pointer' : 'cursor-default'
+      }`}
+      style={{ padding: '11.73px 23.46px', ...containerStyle }}
     >
-      <span className={`flex items-center justify-center w-8 h-8 rounded-lg mr-4 font-bold text-sm
-        ${optionState === 'idle' ? 'bg-black/5 text-black/40' : 'bg-current/10'}`}>
-        {label}
-      </span>
-      <span className="text-lg font-medium">
-        {displayLanguage === 'en' ? word.en : word.ar}
-      </span>
-      
-      {optionState === 'correct' && <span className="ml-auto text-xl">✓</span>}
-      {optionState === 'wrong' && <span className="ml-auto text-xl">✕</span>}
+      <div className="flex items-center gap-4">
+        <span
+          className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white shrink-0 transition-colors duration-300"
+          style={{ background: labelBg }}
+        >
+          {label}
+        </span>
+        <span
+          className="text-base font-medium text-[#1A1A1A]"
+          style={{ fontFamily: FONT_SERIF, fontSize: '1.05rem' }}
+          dir={displayLanguage === 'ar' ? 'rtl' : 'ltr'}
+        >
+          {displayLanguage === 'en' ? word.en : word.ar}
+        </span>
+      </div>
+      {optionState === 'correct' && <span className="text-[#24766F] text-lg">✓</span>}
+      {optionState === 'wrong' && <span className="text-red-500 text-lg">✕</span>}
     </button>
   )
 }
@@ -54,7 +85,7 @@ function PassScreen() {
         <div className="mx-auto mb-6 w-20 h-20 rounded-full border-2 border-[#24766F] bg-[#24766F]/10 flex items-center justify-center">
           <span className="text-4xl text-[#24766F]">✓</span>
         </div>
-        <h2 className="text-4xl font-bold text-[#1A1A1A] mb-3" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+        <h2 className="text-4xl font-bold text-[#1A1A1A] mb-3" style={{ fontFamily: FONT_SERIF }}>
           Bucket Complete
         </h2>
         <p className="text-sm text-[#1A1A1A]/50">
@@ -62,6 +93,32 @@ function PassScreen() {
         </p>
       </div>
     </main>
+  )
+}
+
+// --- Status Popup ---
+function StatusPopup({ message, type }: { message: string; type: 'wrong' | 'timeout' }) {
+  const bg = type === 'timeout'
+    ? 'rgba(254, 243, 199, 0.95)'  // soft amber
+    : 'rgba(254, 226, 226, 0.95)'  // soft red
+
+  const border = type === 'timeout'
+    ? 'rgba(251, 191, 36, 0.4)'
+    : 'rgba(239, 68, 68, 0.3)'
+
+  return (
+    <div
+      className="absolute inset-x-0 top-1/2 -translate-y-1/2 mx-auto w-fit px-8 py-12 rounded-2xl shadow-lg flex items-center justify-center animate-fade-in z-10"
+      style={{
+        background: bg,
+        border: `1px solid ${border}`,
+        backdropFilter: 'blur(4px)',
+      }}
+    >
+      <p className="text-sm font-semibold text-[#1A1A1A] text-center leading-relaxed">
+        {message}
+      </p>
+    </div>
   )
 }
 
@@ -75,6 +132,7 @@ export default function Quiz() {
     isRevealed,
     isCorrect,
     quizResult,
+    statusMessage,
     handleAnswer,
     timeLeft,
     displayLanguage,
@@ -90,9 +148,13 @@ export default function Quiz() {
     return 'idle'
   }
 
+  // Determine popup type from message content
+  const popupType = statusMessage.startsWith("Time's up") ? 'timeout' : 'wrong'
+
   return (
     <PageContainer>
       <div className="flex flex-col w-full max-w-4xl mx-auto px-4 sm:px-0">
+
         <header className="mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-2xl font-bold text-[#1A1A1A]">
@@ -106,13 +168,14 @@ export default function Quiz() {
           <ProgressBar current={questionIndex} total={questionsCount} />
         </header>
 
-        <div className="mb-6 sm:mb-8 rounded-2xl border border-black/8 bg-white sm:bg-[#FAFAFA] px-6 py-8 text-center shadow-sm">
+        {/* Question card — relative so popup can be positioned against it */}
+        <div className="relative mb-6 sm:mb-8 rounded-2xl border border-black/8 bg-white sm:bg-[#FAFAFA] px-6 py-8 text-center shadow-sm">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1A1A1A]/40 mb-3">
             What does this mean?
           </p>
           <p
             className="text-4xl sm:text-5xl font-bold text-[#1A1A1A] leading-tight"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            style={{ fontFamily: FONT_SERIF }}
           >
             {currentQuestion.word.de}
           </p>
@@ -121,8 +184,14 @@ export default function Quiz() {
               {currentQuestion.word.sentence}
             </p>
           )}
+
+          {/* Status popup — floats over the question card */}
+          {statusMessage && (
+            <StatusPopup message={statusMessage} type={popupType} />
+          )}
         </div>
 
+        {/* Options */}
         <div className="flex flex-col gap-3">
           {currentQuestion.options.map((option, i) => (
             <OptionButton
@@ -137,11 +206,6 @@ export default function Quiz() {
           ))}
         </div>
 
-        {selectedId === null && isRevealed && (
-          <p className="mt-5 text-center text-xs text-red-400 font-medium tracking-wide">
-            Time's up — no answer selected.
-          </p>
-        )}
       </div>
     </PageContainer>
   )
