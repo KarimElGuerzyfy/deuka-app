@@ -1,5 +1,3 @@
-// src/hooks/useQuizEngine.ts
-
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGameStore } from '../store/useGameStore'
@@ -31,7 +29,7 @@ export function useQuizEngine() {
     displayLanguage,
     timeLeft,
     feedbackState,
-    // Keep levelComplete here only if you need to react to it in the UI
+    timerEnabled,
     resetTimer,
     tickTimer,
     submitAnswer,
@@ -65,8 +63,10 @@ export function useQuizEngine() {
   const startTimer = useCallback(() => {
     stopTimer()
     resetTimer(5)
-    intervalRef.current = setInterval(() => tickTimer(), 1000)
-  }, [stopTimer, resetTimer, tickTimer])
+    if (timerEnabled) {
+      intervalRef.current = setInterval(() => tickTimer(), 1000)
+    }
+  }, [stopTimer, resetTimer, tickTimer, timerEnabled])
 
   const handleRetry = useCallback(() => {
     useGameStore.setState({ feedbackState: 'idle', timeLeft: 5, score: 0 })
@@ -75,6 +75,7 @@ export function useQuizEngine() {
   }, [setAppMode, navigate])
 
   const handleContinue = useCallback(() => {
+    // Single source of truth for bucket advancement
     advanceBucket()
     useGameStore.setState({ feedbackState: 'idle', timeLeft: 5 })
     setAppMode('learning')
@@ -94,25 +95,31 @@ export function useQuizEngine() {
       setTimeout(() => {
         if (!mountedRef.current) return
         const nextIndex = questionIndex + 1
-        
-        // Reset feedback locally
+
         useGameStore.setState({ feedbackState: 'idle' })
 
         if (nextIndex >= questions.length) {
           setQuestionIndex(questions.length)
-          
-          // 1. Trigger the move in the store
-          advanceBucket()
-          
-          // 2. CRITICAL: Read the NEW state directly from the store snapshot
-          // This avoids the stale closure of the 'levelComplete' variable
-          const isLevelDone = useGameStore.getState().levelComplete
-          
-          if (isLevelDone) {
-            setQuizResult('level-complete')
-          } else {
-            setQuizResult('pass')
+
+          // Peek ahead without mutating store — handleContinue does the actual advance
+          const state = useGameStore.getState()
+          let nextBucket = state.currentBucketIndex + 1
+          let nextCenturion = state.currentCenturionIndex
+          let isLevelDone = false
+
+          try {
+            vocabularyService.getBucket(state.currentLevel, nextCenturion, nextBucket)
+          } catch {
+            nextBucket = 0
+            nextCenturion += 1
+            try {
+              vocabularyService.getBucket(state.currentLevel, nextCenturion, nextBucket)
+            } catch {
+              isLevelDone = true
+            }
           }
+
+          setQuizResult(isLevelDone ? 'level-complete' : 'pass')
         } else {
           setQuestionIndex(nextIndex)
           setSelectedId(null)
@@ -130,10 +137,9 @@ export function useQuizEngine() {
         )
       }, 1500)
     }
-    // Note: levelComplete removed from deps to avoid unnecessary re-runs
-  }, [feedbackState, quizResult, currentQuestion.correctId, submitAnswer, stopTimer, questionIndex, questions.length, advanceBucket])
+  }, [feedbackState, quizResult, currentQuestion.correctId, submitAnswer, stopTimer, questionIndex, questions.length])
 
-  // EFFECT: Timer Control
+  // Timer control
   useEffect(() => {
     if (feedbackState === 'idle' && !quizResult) {
       startTimer()
@@ -143,26 +149,36 @@ export function useQuizEngine() {
     return () => stopTimer()
   }, [feedbackState, quizResult, questionIndex, startTimer, stopTimer])
 
-  // EFFECT: Auto-timeout
+  // Auto-timeout
   useEffect(() => {
-    if (timeLeft === 0 && feedbackState === 'idle' && !quizResult) {
+    if (timeLeft === 0 && feedbackState === 'idle' && !quizResult && timerEnabled) {
       const defer = setTimeout(() => handleAnswer(null), 0)
       return () => clearTimeout(defer)
     }
-  }, [timeLeft, feedbackState, quizResult, handleAnswer])
+  }, [timeLeft, feedbackState, quizResult, handleAnswer, timerEnabled])
 
-  // EFFECT: Success/Fail Navigation
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>
-    if (quizResult === 'pass') {
-      timer = setTimeout(() => { if (mountedRef.current) handleContinue() }, 1300)
-    } else if (quizResult === 'fail') {
-      timer = setTimeout(() => { if (mountedRef.current) handleRetry() }, 2500)
-    }
-    return () => { if (timer) clearTimeout(timer) }
-  }, [quizResult, handleContinue, handleRetry])
+  const handleLevelContinue = () => {
+  clearLevelComplete()
+  advanceBucket()
+  setAppMode('learning')
+  navigate('/', { replace: true })
+}
 
-  // EFFECT: Cleanup on Unmount
+  // Navigation after completion
+useEffect(() => {
+  let timer: ReturnType<typeof setTimeout>
+  if (quizResult === 'pass') {
+    timer = setTimeout(() => { if (mountedRef.current) handleContinue() }, 1300)
+  } else if (quizResult === 'fail') {
+    timer = setTimeout(() => { if (mountedRef.current) handleRetry() }, 2500)
+  } else if (quizResult === 'level-complete') {
+    timer = setTimeout(() => { if (mountedRef.current) handleLevelContinue() }, 1300)
+  }
+  return () => { if (timer) clearTimeout(timer) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [quizResult])
+
+  // Cleanup on unmount
   useEffect(() => {
     mountedRef.current = true
     return () => {
@@ -172,11 +188,6 @@ export function useQuizEngine() {
     }
   }, [stopTimer])
 
-  const handleLevelContinue = useCallback(() => {
-    clearLevelComplete()
-    setAppMode('learning')
-    navigate('/', { replace: true })
-  }, [clearLevelComplete, setAppMode, navigate])
 
   return {
     currentQuestion,

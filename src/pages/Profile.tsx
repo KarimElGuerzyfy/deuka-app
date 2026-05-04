@@ -15,14 +15,22 @@ import {
   Lock,
   AlertCircle,
   Loader2,
+  Timer,
 } from 'lucide-react';
 
 export default function Profile() {
   const { user, signOut } = useAuth();
-  const { displayLanguage, toggleLanguage, currentLevel, seenWordIds, score } = useGameStore();
+  const {
+    displayLanguage,
+    toggleLanguage,
+    currentLevel,
+    seenWordIds,
+    score,
+    timerEnabled,
+    toggleTimer,
+  } = useGameStore();
   const settingsRef = useRef<HTMLDivElement>(null);
 
-  // Local UI state
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name ?? '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,51 +53,42 @@ export default function Profile() {
     setUpdateMessage(null);
 
     try {
-      // Update full name in user metadata
       const { error: nameError } = await supabase.auth.updateUser({
         data: { full_name: fullName },
       });
       if (nameError) throw nameError;
 
-      // Update password if provided
       if (password) {
         if (password !== confirmPassword) {
           throw new Error('Passwords do not match');
         }
-        const { error: passwordError } = await supabase.auth.updateUser({
-          password,
-        });
+        const { error: passwordError } = await supabase.auth.updateUser({ password });
         if (passwordError) throw passwordError;
         setPassword('');
         setConfirmPassword('');
       }
 
       setUpdateMessage({ type: 'success', text: 'Profile updated successfully' });
-          } catch (err) {
-            // Narrow the type from 'unknown' to 'Error'
-            const errorMessage = err instanceof Error ? err.message : 'Update failed';
-            
-            setUpdateMessage({ 
-              type: 'error', 
-              text: errorMessage 
-            });
-          } finally {
-            setIsUpdating(false);
-            setTimeout(() => setUpdateMessage(null), 5000);
-          }
-        };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Update failed';
+      setUpdateMessage({ type: 'error', text: errorMessage });
+    } finally {
+      setIsUpdating(false);
+      setTimeout(() => setUpdateMessage(null), 5000);
+    }
+  };
 
   return (
-    <main className="flex-1 overflow-y-auto bg-gray-50 pb-32">
+    <main className="flex-1 overflow-y-auto bg-app-bg pb-32">
       <div className="max-w-2xl mx-auto px-6 pt-10 space-y-8">
         
         {/* Profile Hero */}
         <section className="flex flex-col items-center text-center space-y-4">
-          <div className="w-24 h-24 bg-[#24766F] rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+          <div className="w-24 h-24 bg-brand-green rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
             {user?.email?.[0]?.toUpperCase() ?? 'K'}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-brand-dark">
               {user?.user_metadata?.full_name ?? 'Karim El Guerzyfy'}
             </h1>
             <p className="text-gray-500 text-sm">{user?.email}</p>
@@ -123,6 +122,7 @@ export default function Profile() {
         <div ref={settingsRef} id="settings-area" className="pt-4 space-y-6">
           <SettingsSection title="Preferences">
             <div className="p-4 space-y-4">
+              {/* Language Toggle */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
@@ -135,29 +135,20 @@ export default function Profile() {
                     </p>
                   </div>
                 </div>
-                {/* Segmented Control */}
                 <div className="flex bg-gray-100 rounded-lg p-0.5">
                   <button
-                    onClick={() => {
-                      if (displayLanguage !== 'en') toggleLanguage();
-                    }}
+                    onClick={() => { if (displayLanguage !== 'en') toggleLanguage(); }}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                      displayLanguage === 'en'
-                        ? 'bg-white text-[#24766F] shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700'
+                      displayLanguage === 'en' ? 'bg-white text-brand-green shadow-sm' : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
                     {displayLanguage === 'en' && <Check size={14} />}
                     English
                   </button>
                   <button
-                    onClick={() => {
-                      if (displayLanguage !== 'ar') toggleLanguage();
-                    }}
+                    onClick={() => { if (displayLanguage !== 'ar') toggleLanguage(); }}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                      displayLanguage === 'ar'
-                        ? 'bg-white text-[#24766F] shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700'
+                      displayLanguage === 'ar' ? 'bg-white text-brand-green shadow-sm' : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
                     {displayLanguage === 'ar' && <Check size={14} />}
@@ -165,12 +156,38 @@ export default function Profile() {
                   </button>
                 </div>
               </div>
+
+              {/* Timer Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-50 rounded-lg text-green-600">
+                    <Timer size={18} />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Quiz Timer</p>
+                    <p className="text-xs text-gray-500">
+                      {timerEnabled ? 'Enabled — 5 seconds per question' : 'Disabled — unlimited time'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleTimer}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    timerEnabled ? 'bg-brand-green' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      timerEnabled ? 'translate-x-6' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
           </SettingsSection>
 
           <SettingsSection title="Account">
             <div className="p-4 space-y-5">
-              {/* Update Name */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                   <User size={16} className="text-gray-400" />
@@ -181,11 +198,10 @@ export default function Profile() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Your name"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#24766F]/20 focus:border-[#24766F]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green"
                 />
               </div>
 
-              {/* Update Password */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                   <Lock size={16} className="text-gray-400" />
@@ -196,11 +212,10 @@ export default function Profile() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Leave blank to keep current"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#24766F]/20 focus:border-[#24766F]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green"
                 />
               </div>
 
-              {/* Confirm Password (only if new password entered) */}
               {password && (
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -212,30 +227,21 @@ export default function Profile() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm new password"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#24766F]/20 focus:border-[#24766F]"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green"
                   />
                 </div>
               )}
 
-              {/* Update Button & Feedback */}
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <button
                   onClick={handleUpdateProfile}
                   disabled={isUpdating || !fullName.trim()}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-[#24766F] text-white rounded-lg text-sm font-semibold hover:bg-[#1e5f59] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-brand-green text-white rounded-lg text-sm font-semibold hover:bg-brand-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isUpdating ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    'Save Changes'
-                  )}
+                  {isUpdating ? <Loader2 size={16} className="animate-spin" /> : 'Save Changes'}
                 </button>
                 {updateMessage && (
-                  <div
-                    className={`flex items-center gap-1.5 text-xs ${
-                      updateMessage.type === 'success' ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
+                  <div className={`flex items-center gap-1.5 text-xs ${updateMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
                     <AlertCircle size={14} />
                     {updateMessage.text}
                   </div>

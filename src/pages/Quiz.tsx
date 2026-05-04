@@ -73,7 +73,7 @@ function OptionButton({ word, label, displayLanguage, optionState, disabled, onC
           {displayLanguage === 'en' ? word.en : word.ar}
         </span>
       </div>
-      {optionState === 'correct' && <span className="text-[#24766F] text-lg">✓</span>}
+      {optionState === 'correct' && <span className="text-brand-green text-lg">✓</span>}
       {optionState === 'wrong' && <span className="text-red-500 text-lg">✕</span>}
     </button>
   )
@@ -84,8 +84,8 @@ function PassScreen() {
   return (
     <main className="flex-1 flex items-center justify-center px-4 bg-app-bg">
       <div className="w-full max-w-md text-center">
-        <div className="mx-auto mb-6 w-20 h-20 rounded-full border-2 border-[#24766F] bg-[#24766F]/10 flex items-center justify-center">
-          <span className="text-4xl text-[#24766F]">✓</span>
+        <div className="mx-auto mb-6 w-20 h-20 rounded-full border-2 border-brand-green bg-brand-green/10 flex items-center justify-center">
+          <span className="text-4xl text-brand-green">✓</span>
         </div>
         <h2 className="text-4xl font-bold text-[#1A1A1A] mb-3" style={{ fontFamily: FONT_SERIF }}>
           Bucket Complete
@@ -104,11 +104,11 @@ function LevelCompleteScreen({ level, onContinue }: { level: string; onContinue:
     <main className="flex-1 flex items-center justify-center px-4 bg-app-bg">
       <div className="w-full max-w-lg text-center">
 
-        <div className="mx-auto mb-8 w-28 h-28 rounded-full bg-[#24766F]/10 border-2 border-[#24766F]/40 flex items-center justify-center">
+        <div className="mx-auto mb-8 w-28 h-28 rounded-full bg-brand-green/10 border-2 border-brand-green/40 flex items-center justify-center">
           <span className="text-5xl">🏆</span>
         </div>
 
-        <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#24766F]/70 mb-3">
+        <p className="text-xs font-bold uppercase tracking-[0.3em] text-text-brand/70 mb-3">
           Level Complete
         </p>
         <h2
@@ -121,11 +121,11 @@ function LevelCompleteScreen({ level, onContinue }: { level: string; onContinue:
           Every Centurion cleared. Every word earned. You've built a real foundation — now it gets harder.
         </p>
 
-        <div className="w-16 h-px bg-[#24766F]/30 mx-auto mb-10" />
+        <div className="w-16 h-px bg-brand-green/30 mx-auto mb-10" />
 
         <button
           onClick={onContinue}
-          className="w-full max-w-xs mx-auto flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-sm transition-all active:scale-95 border border-[#24766F] bg-[#B2E5FF]/20 text-black shadow-[0_0_12px_rgba(36,118,111,0.2)]"
+          className="w-full max-w-xs mx-auto flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-sm transition-all active:scale-95 border border-borderbrand bg-[#B2E5FF]/20 text-black shadow-[0_0_12px_rgba(36,118,111,0.2)]"
         >
           CONTINUE TO NEXT LEVEL
         </button>

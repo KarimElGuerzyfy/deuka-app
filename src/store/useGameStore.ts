@@ -8,26 +8,21 @@ type FeedbackState = 'idle' | 'correct' | 'incorrect'
 type DisplayLanguage = 'en' | 'ar'
 
 interface GameState {
-  // App Control
   appMode: AppMode
   currentLevel: Level
   currentCenturionIndex: number
   currentBucketIndex: number
   displayLanguage: DisplayLanguage
-
-  // Learning Session
   currentWord: Word | null
   seenWordIds: string[]
   wordIndexInBucket: number
-
-  // Quiz Session
   feedbackState: FeedbackState
   score: number
   timeLeft: number
   isQuizActive: boolean
-  levelComplete: boolean  // signals level completion to the UI
+  levelComplete: boolean
+  timerEnabled: boolean
 
-  // Actions
   setAppMode: (mode: AppMode) => void
   setLevel: (level: Level) => void
   toggleLanguage: () => void
@@ -40,10 +35,10 @@ interface GameState {
   tickTimer: () => void
   setQuizActive: (active: boolean) => void
   clearLevelComplete: () => void
+  toggleTimer: () => void
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
-  // Initial State
   appMode: 'learning',
   currentLevel: 'A1',
   currentCenturionIndex: 0,
@@ -57,8 +52,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   timeLeft: 5,
   isQuizActive: false,
   levelComplete: false,
+  timerEnabled: true,
 
-  // Actions
   setAppMode: (mode) => set({ appMode: mode }),
 
   setLevel: (level) => set({
@@ -91,7 +86,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     const state = get()
     try {
       const bucket = vocabularyService.getBucket(state.currentLevel, state.currentCenturionIndex, state.currentBucketIndex)
-
       let nextWordIndex = state.currentWord ? state.wordIndexInBucket + 1 : 0
       let nextBucketIndex = state.currentBucketIndex
       let nextCenturionIndex = state.currentCenturionIndex
@@ -99,7 +93,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (nextWordIndex >= bucket.words.length) {
         nextWordIndex = 0
         nextBucketIndex += 1
-
         try {
           vocabularyService.getBucket(state.currentLevel, nextCenturionIndex, nextBucketIndex)
         } catch {
@@ -132,16 +125,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     let nextCenturion = state.currentCenturionIndex
 
     try {
-      // Try next bucket in current centurion
       vocabularyService.getBucket(state.currentLevel, nextCenturion, nextBucket)
     } catch {
-      // No more buckets — try next centurion
       nextBucket = 0
       nextCenturion += 1
       try {
         vocabularyService.getBucket(state.currentLevel, nextCenturion, nextBucket)
       } catch {
-        // No more centurions — level is complete
         set({
           levelComplete: true,
           feedbackState: 'idle',
@@ -178,10 +168,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   }),
 
   resetTimer: (time) => set({ timeLeft: time }),
-
   tickTimer: () => set((state) => ({
     timeLeft: Math.max(0, state.timeLeft - 1)
   })),
-
   setQuizActive: (active) => set({ isQuizActive: active }),
+  toggleTimer: () => set((state) => ({ timerEnabled: !state.timerEnabled })),
 }))
