@@ -54,7 +54,7 @@ function OptionButton({ word, label, displayLanguage, optionState, disabled, onC
         <span
           className="flex items-center justify-center shrink-0 transition-colors duration-300"
           style={{
-            background: optionState === 'correct' ? '#24766F' : optionState === 'wrong' ? '#EF4444' : '#E5EEFF',
+            background: optionState === 'correct' ? 'var(--color-brand-green)' : optionState === 'wrong' ? '#EF4444' : '#E5EEFF',
             color: optionState === 'idle' ? '#003453' : 'white',
             borderRadius: '8px',
             width: '36px',
@@ -67,7 +67,7 @@ function OptionButton({ word, label, displayLanguage, optionState, disabled, onC
         </span>
         <span
           className="text-base font-medium text-[#1A1A1A]"
-          style={{ fontFamily: FONT_SERIF, fontSize: '1.05rem' }}
+          style={{ fontSize: '1.05rem' }}
           dir={displayLanguage === 'ar' ? 'rtl' : 'ltr'}
         >
           {displayLanguage === 'en' ? word.en : word.ar}
@@ -87,7 +87,7 @@ function PassScreen() {
         <div className="mx-auto mb-6 w-20 h-20 rounded-full border-2 border-brand-green bg-brand-green/10 flex items-center justify-center">
           <span className="text-4xl text-brand-green">✓</span>
         </div>
-        <h2 className="text-4xl font-bold text-[#1A1A1A] mb-3" style={{ fontFamily: FONT_SERIF }}>
+        <h2 className="text-4xl font-bold text-[#1A1A1A] mb-3">
           Bucket Complete
         </h2>
         <p className="text-sm text-[#1A1A1A]/50">
@@ -113,7 +113,6 @@ function LevelCompleteScreen({ level, onContinue }: { level: string; onContinue:
         </p>
         <h2
           className="text-5xl font-bold text-[#1A1A1A] mb-4 leading-tight"
-          style={{ fontFamily: FONT_SERIF }}
         >
           You mastered Level {level}
         </h2>

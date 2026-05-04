@@ -52,7 +52,7 @@ export default function Learning() {
               disabled={!allWordsSeen}
               className={`shadow-deuka mt-4 sm:mt-8 mb-0 sm:mb-2 w-full max-w-xs mx-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm transition-all active:scale-95
                 ${allWordsSeen
-                  ? 'bg-[#B2E5FF]/26 border border-[#24766F] text-black shadow-[0_0_12px_rgba(36,118,111,0.3)]'
+                  ? 'bg-[#B2E5FF]/26 border border-brand-green text-black shadow-[0_0_12px_rgba(36,118,111,0.3)]'
                   : 'bg-[#B2E5FF]/26 border border-black/70 text-black opacity-30 cursor-not-allowed'
                 }`}
             >

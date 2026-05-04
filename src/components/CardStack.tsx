@@ -6,7 +6,7 @@ import { Languages, HelpCircle, RefreshCw } from 'lucide-react'
 type CardRole = 'german' | 'translation' | 'hint'
 
 const ROLE_COLORS: Record<CardRole, string> = {
-  german: '#24766F',
+  german: 'var(--color-brand-green)',
   translation: '#0077CC',
   hint: '#458CAF',
 }
