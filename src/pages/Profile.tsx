@@ -24,10 +24,10 @@ export default function Profile() {
     displayLanguage,
     toggleLanguage,
     currentLevel,
-    seenWordIds,
-    score,
     timerEnabled,
     toggleTimer,
+    wordsMastered,
+    bucketsCleared,
   } = useGameStore();
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -42,9 +42,21 @@ export default function Profile() {
   };
 
   const stats = [
-    { label: 'Current Level', value: currentLevel, icon: <GraduationCap size={20} className="text-blue-500" /> },
-    { label: 'Words Seen', value: seenWordIds.length, icon: <BookOpen size={20} className="text-green-500" /> },
-    { label: 'Quiz High Score', value: score, icon: <Trophy size={20} className="text-yellow-500" /> },
+    {
+      label: 'Current Level',
+      value: currentLevel,
+      icon: <GraduationCap size={20} className="text-blue-500" />,
+    },
+    {
+      label: 'Words Mastered',
+      value: wordsMastered,
+      icon: <BookOpen size={20} className="text-green-500" />,
+    },
+    {
+      label: 'Buckets Cleared',
+      value: bucketsCleared,
+      icon: <Trophy size={20} className="text-yellow-500" />,
+    },
   ];
 
   const handleUpdateProfile = async () => {
@@ -81,7 +93,7 @@ export default function Profile() {
   return (
     <main className="flex-1 overflow-y-auto bg-app-bg pb-32">
       <div className="max-w-2xl mx-auto px-6 pt-10 space-y-8">
-        
+
         {/* Profile Hero */}
         <section className="flex flex-col items-center text-center space-y-4">
           <div className="w-24 h-24 bg-brand-green rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
@@ -122,6 +134,7 @@ export default function Profile() {
         <div ref={settingsRef} id="settings-area" className="pt-4 space-y-6">
           <SettingsSection title="Preferences">
             <div className="p-4 space-y-4">
+
               {/* Language Toggle */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -158,7 +171,7 @@ export default function Profile() {
               </div>
 
               {/* Timer Toggle */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-green-50 rounded-lg text-green-600">
                     <Timer size={18} />
@@ -183,6 +196,7 @@ export default function Profile() {
                   />
                 </button>
               </div>
+
             </div>
           </SettingsSection>
 

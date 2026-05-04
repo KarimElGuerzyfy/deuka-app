@@ -22,6 +22,8 @@ interface GameState {
   isQuizActive: boolean
   levelComplete: boolean
   timerEnabled: boolean
+  wordsMastered: number
+  bucketsCleared: number
 
   setAppMode: (mode: AppMode) => void
   setLevel: (level: Level) => void
@@ -53,6 +55,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   isQuizActive: false,
   levelComplete: false,
   timerEnabled: true,
+  wordsMastered: 0,
+  bucketsCleared: 0,
 
   setAppMode: (mode) => set({ appMode: mode }),
 
@@ -132,6 +136,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       try {
         vocabularyService.getBucket(state.currentLevel, nextCenturion, nextBucket)
       } catch {
+        // No more centurions — level complete
         set({
           levelComplete: true,
           feedbackState: 'idle',
@@ -140,6 +145,8 @@ export const useGameStore = create<GameState>((set, get) => ({
           seenWordIds: [],
           wordIndexInBucket: 0,
           currentWord: null,
+          wordsMastered: state.wordsMastered + 10,
+          bucketsCleared: state.bucketsCleared + 1,
         })
         return
       }
@@ -153,6 +160,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       currentWord: null,
       score: 0,
       feedbackState: 'idle',
+      wordsMastered: state.wordsMastered + 10,
+      bucketsCleared: state.bucketsCleared + 1,
     })
   },
 
@@ -168,9 +177,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   }),
 
   resetTimer: (time) => set({ timeLeft: time }),
+
   tickTimer: () => set((state) => ({
     timeLeft: Math.max(0, state.timeLeft - 1)
   })),
+
   setQuizActive: (active) => set({ isQuizActive: active }),
+
   toggleTimer: () => set((state) => ({ timerEnabled: !state.timerEnabled })),
 }))
