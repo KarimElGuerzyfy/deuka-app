@@ -5,8 +5,14 @@
   --color-brand-dark: #0E2029;
   --color-app-bg: #F1F3F2;
   --shadow-deuka: 0 4px 5px rgba(0, 0, 0, 0.5);
+  --shadow-deuka-up: 0 -6px 5px rgba(0, 0, 0, 0.2);
   --color-brand-green: #24766F;
   --animate-fade-in: fadeIn 0.15s ease-in forwards;
+  --color-nav-level-active: #3EA6FF;
+  --color-nav-level-inactive: #A8D0F2;
+  --color-nav-level-text: #020F61;
+  --color-nav-avatar-bg: #D0F1FF;
+  --color-nav-avatar-icon: #292929;
 
   @keyframes fadeIn {
     0% { opacity: 0; }

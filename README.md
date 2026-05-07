@@ -2,13 +2,14 @@
 
 > **German vocabulary mastery — built on the principle that passive exposure is not learning.**
 
-DEUKA is a structured German vocabulary application that enforces genuine retention through a strict progression architecture called the **Centurion System**. Users cannot skip, rush, or shortcut their way through the curriculum. Every word is earned.
+DEUKA is a structured German vocabulary app for serious learners. It enforces genuine retention through a strict progression architecture called the **Centurion System** — a three-tier curriculum of Levels, Centurions, and Buckets that requires a perfect 10/10 quiz score to advance every 10 words. No shortcuts. No skipping. Every word is earned.
 
 ---
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Screenshots](#screenshots)
 - [The Centurion System](#the-centurion-system)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
@@ -25,6 +26,12 @@ DEUKA is a structured German vocabulary application that enforces genuine retent
 DEUKA covers A1 through B2 level German vocabulary — approximately 4,500 words — organized into a three-tier hierarchy. The app is designed for learners who are serious about retention, not just exposure. It is built as a portfolio project demonstrating production-quality thinking across the full stack: architecture decisions, state management, authentication, database design, and UI/UX.
 
 ---
+
+## Screenshots
+
+| Learning Screen | Quiz Gate | Profile |
+|---|---|---|
+| ![Learning](./docs/screenshots/learning.png) | ![Quiz](./docs/screenshots/quiz.png) | ![Profile](./docs/screenshots/profile.png) |
 
 ## The Centurion System
 
