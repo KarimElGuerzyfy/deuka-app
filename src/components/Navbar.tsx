@@ -24,7 +24,7 @@ function LevelSwitchModal({ isOpen, targetLevel, onConfirm, onCancel, isLoading 
   if (!isOpen || !targetLevel) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center px-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm"
@@ -34,7 +34,7 @@ function LevelSwitchModal({ isOpen, targetLevel, onConfirm, onCancel, isLoading 
       {/* Modal card */}
       <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Top accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-brand-green via-primary to-brand-green" />
+        <div className="h-1 w-full bg-linear-to-r from-brand-green via-primary to-brand-green" />
 
         <div className="p-6 space-y-5">
           <button
@@ -178,7 +178,7 @@ export default function Navbar() {
       {/* ----------------------------------------------------------------- */}
       {/* DESKTOP NAV                                                        */}
       {/* ----------------------------------------------------------------- */}
-      <nav className="hidden md:block sticky top-0 z-50 px-10 py-0 border-b border-black/[0.06] bg-white/90 backdrop-blur-md shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
+      <nav className="hidden md:block sticky top-0 z-50 px-10 py-0 border-b border-black/6 bg-white/90 backdrop-blur-md shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
         <div className="w-full max-w-7xl mx-auto flex justify-between items-center h-14">
 
           {/* Logo */}
@@ -225,7 +225,7 @@ export default function Navbar() {
 
             {/* Dropdown */}
             {isProfileOpen && (
-              <div className="absolute right-0 mt-3 w-60 bg-white border border-black/[0.08] rounded-2xl shadow-xl py-2 overflow-hidden">
+              <div className="absolute right-0 mt-3 w-60 bg-white border border-black/8 rounded-2xl shadow-xl py-2 overflow-hidden">
 
                 {/* Account header */}
                 <div className="px-4 py-3">
@@ -237,7 +237,7 @@ export default function Navbar() {
                   </p>
                 </div>
 
-                <div className="h-px bg-black/[0.06] mx-3" />
+                <div className="h-px bg-black/6 mx-3" />
 
                 {/* Nav links */}
                 <Link
@@ -249,7 +249,7 @@ export default function Navbar() {
                   Profile
                 </Link>
 
-                <div className="h-px bg-black/[0.06] mx-3" />
+                <div className="h-px bg-black/6 mx-3" />
 
                 {/* Settings block */}
                 <div className="px-4 py-3">
@@ -272,7 +272,7 @@ export default function Navbar() {
                   </button>
                 </div>
 
-                <div className="h-px bg-black/[0.06] mx-3" />
+                <div className="h-px bg-black/6 mx-3" />
 
                 {/* Logout */}
                 <button

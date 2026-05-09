@@ -8,7 +8,8 @@ export type Category =
   | 'adverb'
   | 'adjective'
   | 'noun'
-  | 'number';
+  | 'number'
+  | 'phrase';
 
 export type Level = 'A1' | 'A2' | 'B1' | 'B2';
 
