@@ -297,7 +297,8 @@ create trigger on_auth_user_created
 | 6 | Quiz Gate — timer, distractors, fail/pass flow | ✅ Complete |
 | 7 | Supabase — progress persistence, profile sync, account deletion | ✅ Complete |
 | 8 | Polish — responsive design, deploy to Vercel | 🔲 In Progress |
-| 9 | Vocabulary data — full A1–B2 word lists | 🔲 Pending |
+| 9 | Vocabulary data — full A1–B2 word lists (EN + AR) | ✅ Complete |
+| 10 | Arabic UI — full RTL layout and Arabic-first mode | 🔲 Coming Next |
 
 ---
 
@@ -318,6 +319,12 @@ This transforms what was a bug into a deliberate UX constraint that reinforces t
 The implementation is three lines of store logic and a modal. The alternative — multi-level progress tracking — would have been weeks of work for a feature that actively works against what DEUKA is trying to be.
 
 Recognising when a technical behaviour aligns with product intent, and choosing to embrace it rather than patch it, is one of the more valuable skills in software development. This was one of those moments.
+
+---
+
+## Coming Next
+
+The groundwork for Arabic-first mode is already in place — EN/AR language toggle, RTL layout foundations, and Arabic translations across the full A1–B2 dataset. The next update will ship a full Arabic UI: RTL layout throughout, Arabic as the primary display language, and the app fully usable for Arabic-speaking German learners without switching to English.
 
 ---
 

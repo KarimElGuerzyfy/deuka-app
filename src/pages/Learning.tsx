@@ -11,14 +11,14 @@ export default function Learning() {
   const navigate = useNavigate()
   const { currentLevel, seenWordIds, currentBucketIndex, currentCenturionIndex, setAppMode } = useGameStore()
 
-  const wordsSeenInBucket = seenWordIds.filter(id =>
-    id.startsWith(`${currentLevel}-${currentCenturionIndex + 1}-${currentBucketIndex + 1}`)
-  ).length
-
   const bucket = (() => {
     try { return vocabularyService.getBucket(currentLevel, currentCenturionIndex, currentBucketIndex) }
     catch { return null }
   })()
+
+  const wordsSeenInBucket = bucket ? seenWordIds.filter(id =>
+    bucket.words.some(word => word.id === id)
+  ).length : 0
 
   const allWordsSeen = bucket ? bucket.words.every(w => seenWordIds.includes(w.id)) : false
 
