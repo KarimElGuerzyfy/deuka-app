@@ -1,4 +1,5 @@
 import { useQuizEngine } from '../hooks/useQuizEngine'
+import { translations } from '../i18n/translations'
 import PageContainer from '../components/PageContainer'
 import ProgressBar from '../components/ProgressBar'
 import TimerPill from '../components/TimerPill'
@@ -68,7 +69,6 @@ function OptionButton({ word, label, displayLanguage, optionState, disabled, onC
         <span
           className="text-base font-medium text-[#1A1A1A]"
           style={{ fontSize: '1.05rem' }}
-          dir={displayLanguage === 'ar' ? 'rtl' : 'ltr'}
         >
           {displayLanguage === 'en' ? word.en : word.ar}
         </span>
@@ -80,7 +80,7 @@ function OptionButton({ word, label, displayLanguage, optionState, disabled, onC
 }
 
 // --- PassScreen ---
-function PassScreen() {
+function PassScreen({ t }: { t: typeof translations.en }) {
   return (
     <main className="flex-1 flex items-center justify-center px-4 bg-app-bg">
       <div className="w-full max-w-md text-center">
@@ -88,10 +88,10 @@ function PassScreen() {
           <span className="text-4xl text-brand-green">✓</span>
         </div>
         <h2 className="text-4xl font-bold text-[#1A1A1A] mb-3">
-          Bucket Complete
+          {t.bucketComplete}
         </h2>
         <p className="text-sm text-[#1A1A1A]/50">
-          Perfect score — moving to the next bucket.
+          {t.bucketCompleteSubtitle}
         </p>
       </div>
     </main>
@@ -99,7 +99,7 @@ function PassScreen() {
 }
 
 // --- LevelCompleteScreen ---
-function LevelCompleteScreen({ level, onContinue }: { level: string; onContinue: () => void }) {
+function LevelCompleteScreen({ level, onContinue, t }: { level: string; onContinue: () => void; t: typeof translations.en }) {
   return (
     <main className="flex-1 flex items-center justify-center px-4 bg-app-bg">
       <div className="w-full max-w-lg text-center">
@@ -109,15 +109,13 @@ function LevelCompleteScreen({ level, onContinue }: { level: string; onContinue:
         </div>
 
         <p className="text-xs font-bold uppercase tracking-[0.3em] text-text-brand/70 mb-3">
-          Level Complete
+          {t.levelComplete}
         </p>
-        <h2
-          className="text-5xl font-bold text-[#1A1A1A] mb-4 leading-tight"
-        >
-          You mastered Level {level}
+        <h2 className="text-5xl font-bold text-[#1A1A1A] mb-4 leading-tight">
+          {t.youMastered(level)}
         </h2>
         <p className="text-base text-[#1A1A1A]/50 mb-10 max-w-sm mx-auto leading-relaxed">
-          Every Centurion cleared. Every word earned. You've built a real foundation — now it gets harder.
+          {t.levelCompleteBody}
         </p>
 
         <div className="w-16 h-px bg-brand-green/30 mx-auto mb-10" />
@@ -126,7 +124,7 @@ function LevelCompleteScreen({ level, onContinue }: { level: string; onContinue:
           onClick={onContinue}
           className="w-full max-w-xs mx-auto flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-sm transition-all active:scale-95 border border-borderbrand bg-[#B2E5FF]/20 text-black shadow-[0_0_12px_rgba(36,118,111,0.2)]"
         >
-          CONTINUE TO NEXT LEVEL
+          {t.continueToNextLevel}
         </button>
 
       </div>
@@ -178,11 +176,13 @@ export default function Quiz() {
     currentLevel,
   } = useQuizEngine()
 
+  const t = translations[displayLanguage]
+
   if (quizResult === 'level-complete') {
-    return <LevelCompleteScreen level={currentLevel} onContinue={handleLevelContinue} />
+    return <LevelCompleteScreen level={currentLevel} onContinue={handleLevelContinue} t={t} />
   }
 
-  if (quizResult === 'pass') return <PassScreen />
+  if (quizResult === 'pass') return <PassScreen t={t} />
   if (!currentQuestion) return null
 
   const getOptionState = (option: Word): 'idle' | 'correct' | 'wrong' => {
@@ -199,10 +199,9 @@ export default function Quiz() {
       <div className="flex flex-col w-full max-w-xl mx-auto px-4 sm:px-0">
 
         <header className="mb-4 sm:mb-6">
-          {/* On mobile: timer centered. On sm+: question count left, timer right */}
           <div className="flex items-center justify-center sm:justify-between mb-3">
             <h2 className="hidden sm:block text-2xl font-bold text-[#1A1A1A]">
-              Question {Math.min(questionIndex + 1, questionsCount)}/{questionsCount}
+              {t.question} {Math.min(questionIndex + 1, questionsCount)}/{questionsCount}
             </h2>
             <TimerPill timeLeft={timeLeft} />
           </div>
@@ -212,7 +211,7 @@ export default function Quiz() {
         {/* Question card */}
         <div className="relative mb-6 sm:mb-8 rounded-2xl border border-black/8 bg-brand-green px-6 py-8 text-center shadow-sm">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50 mb-3">
-            What does this mean?
+            {t.whatDoesThisMean}
           </p>
           <p
             className="text-4xl sm:text-5xl font-bold text-white leading-tight"

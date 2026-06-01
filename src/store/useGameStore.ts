@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { subscribeWithSelector } from 'zustand/middleware'
 import type { Level } from '../types'
 import type { Word } from '../types/vocabulary'
 import { vocabularyService } from '../services/vocabularyService'
@@ -89,7 +90,7 @@ const persistUserProfile = async () => {
   }
 }
 
-export const useGameStore = create<GameState>((set, get) => ({
+export const useGameStore = create<GameState>()(subscribeWithSelector((set, get) => ({
   userId: null,
 
   appMode: 'learning',
@@ -292,4 +293,4 @@ export const useGameStore = create<GameState>((set, get) => ({
     })),
 
   setQuizActive: (active) => set({ isQuizActive: active }),
-}))
+})))
