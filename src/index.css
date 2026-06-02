@@ -26,6 +26,4 @@ body {
   padding: 0;
 }
 
-[dir="rtl"] {
-  font-family: 'Noto Sans Arabic', sans-serif;
-}
+[dir="rtl"] { font-family: 'Cairo', sans-serif; }

@@ -372,7 +372,7 @@ export default function Profile() {
               </div>
             </SettingsSection>
 
-            <SettingsSection title={t.session}>
+            <SettingsSection title="">
               <div className="p-4 space-y-3">
                 <button
                   className="w-full py-3 flex items-center justify-center gap-2 text-red-600 font-semibold border border-red-100 rounded-xl hover:bg-red-50 transition-all"

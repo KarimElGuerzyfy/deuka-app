@@ -213,7 +213,7 @@ export default function Navbar() {
             </button>
 
             {isProfileOpen && (
-              <div className="absolute right-0 mt-3 w-60 bg-white border border-black/8 rounded-2xl shadow-xl py-2 overflow-hidden">
+              <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-3 w-60 bg-white border border-black/8 rounded-2xl shadow-xl py-2 overflow-hidden">
                 <div className="px-4 py-3">
                   <p className="text-[9px] uppercase tracking-[0.18em] text-gray-400 font-semibold">
                     {t.signedInAs}

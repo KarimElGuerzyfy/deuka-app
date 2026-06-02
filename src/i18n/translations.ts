@@ -13,9 +13,23 @@ export const translations = {
     language: 'Language',
     signOut: 'Sign out',
 
+    // CardStack
+    generate: 'GENERATE',
+    translate: 'TRANSLATE',
+    hint: 'HINT',
+    cardRoleGerman: 'German',
+    cardRoleTranslation: 'Translation',
+    cardRoleHint: 'Hint',
+    cardPromptGenerate: 'Click GENERATE to start',
+    cardPromptTranslate: 'Click TRANSLATE to reveal',
+    cardPromptHint: 'Click HINT to reveal',
+
     // Learning Screen
     dailyPractice: 'Daily Practice',
     next: 'NEXT',
+    level: 'Level',
+    centurion: 'Centurion',
+    bucket: 'Bucket',
 
     // Quiz Screen
     whatDoesThisMean: 'What does this mean?',
@@ -48,7 +62,6 @@ export const translations = {
     confirmPasswordPlaceholder: 'Confirm new password',
     saveChanges: 'Save Changes',
     profileUpdated: 'Profile updated successfully',
-    session: 'Session',
     logOut: 'Log Out',
     appVersion: 'DEUKA App v1.0.0 — Established 2026',
     dangerZone: 'Danger Zone',
@@ -77,10 +90,23 @@ export const translations = {
     language: 'اللغة',
     signOut: 'تسجيل الخروج',
 
-    // Learning Screen
-    dailyPractice: 'التدريب اليومي',
-    next: 'التالي',
+    // CardStack
+    generate: 'كلمة جديدة',
+    translate: 'ترجمة',
+    hint: 'تلميح',
+    cardRoleGerman: 'ألماني',
+    cardRoleTranslation: 'الترجمة',
+    cardRoleHint: 'تلميح',
+    cardPromptGenerate: 'اضغط كلمة جديدة للبدء',
+    cardPromptTranslate: 'اضغط ترجمة للكشف',
+    cardPromptHint: 'اضغط تلميح للكشف',
 
+    // Learning Screen
+    dailyPractice: ' وقت التدريب',
+    next: 'التالي',
+    level: 'المستوى',
+    centurion: 'المئة',
+    bucket: 'المجموعة',
     // Quiz Screen
     whatDoesThisMean: 'ما معنى هذه الكلمة؟',
     question: 'سؤال',
@@ -92,9 +118,9 @@ export const translations = {
     continueToNextLevel: 'المتابعة إلى المستوى التالي',
 
     // Profile Screen
-    editSettings: 'تعديل الإعدادات',
+    editSettings: ' الإعدادات',
     currentLevel: 'المستوى الحالي',
-    wordsMastered: 'الكلمات المتقنة',
+    wordsMastered: 'الرصيد المكتسب',
     bucketsCleared: 'المجموعات المنجزة',
     preferences: 'الإعدادات المفضلة',
     interfaceLanguage: 'لغة الواجهة',
@@ -112,7 +138,6 @@ export const translations = {
     confirmPasswordPlaceholder: 'أكّد كلمة المرور الجديدة',
     saveChanges: 'حفظ التغييرات',
     profileUpdated: 'تم تحديث الملف الشخصي بنجاح',
-    session: 'الجلسة',
     logOut: 'تسجيل الخروج',
     appVersion: 'تطبيق DEUKA الإصدار 1.0.0 — تأسّس 2026',
     dangerZone: 'منطقة الخطر',
@@ -120,7 +145,7 @@ export const translations = {
     resetProgress: 'إعادة تعيين التقدم',
     resetProgressSubtitle: 'محو جميع الإحصائيات والبدء من A1',
     resetProgressDescription: 'سيؤدي هذا إلى محو جميع إحصائياتك والمجموعات المنجزة والكلمات المتقنة، وإعادة موضعك إلى المستوى A1 — المئة 1 — المجموعة 1. يبقى حسابك نشطاً.',
-    reset: 'إعادة تعيين',
+    reset: 'إعادة التعيين',
     deleteAccount: 'حذف الحساب',
     deleteAccountSubtitle: 'إزالة حسابك نهائياً',
     deleteAccountDescription: 'سيؤدي هذا إلى حذف حسابك وجميع البيانات المرتبطة به بشكل نهائي. لا يمكن التراجع عن ذلك. سيتم تسجيل خروجك ولن تتمكن من استرداد هذا الحساب.',
