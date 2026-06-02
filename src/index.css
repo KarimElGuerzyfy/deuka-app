@@ -25,3 +25,5 @@ body {
   margin: 0;
   padding: 0;
 }
+
+[dir="rtl"] { font-family: 'Cairo', sans-serif; }

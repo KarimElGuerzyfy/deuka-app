@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { vocabularyService } from '../services/vocabularyService'
+import { translations } from '../i18n/translations'
 import { Languages, HelpCircle, RefreshCw } from 'lucide-react'
 
 type CardRole = 'german' | 'translation' | 'hint'
@@ -9,12 +10,6 @@ const ROLE_COLORS: Record<CardRole, string> = {
   german: 'var(--color-brand-green)',
   translation: '#0077CC',
   hint: '#458CAF',
-}
-
-const ROLE_TITLES: Record<CardRole, string> = {
-  german: 'German',
-  translation: 'Translation',
-  hint: 'Hint',
 }
 
 export default function CardStack() {
@@ -27,6 +22,14 @@ export default function CardStack() {
     displayLanguage,
     markWordAsSeen,
   } = useGameStore()
+
+  const t = translations[displayLanguage]
+
+  const ROLE_TITLES: Record<CardRole, string> = {
+    german: t.cardRoleGerman,
+    translation: t.cardRoleTranslation,
+    hint: t.cardRoleHint,
+  }
 
   const [deckOrder, setDeckOrder] = useState<CardRole[]>(['german', 'translation', 'hint'])
   const [isAnimating, setIsAnimating] = useState(false)
@@ -49,7 +52,6 @@ export default function CardStack() {
     const nextIndex = localWord ? (wordIndexInBucket + 1) % bucket.words.length : 0
     const nextWord = bucket.words[nextIndex]
     if (!seenWordIds.includes(nextWord.id)) markWordAsSeen(nextWord.id)
-
     useGameStore.setState({ currentWord: nextWord, wordIndexInBucket: nextIndex })
     setLocalWord(nextWord)
     setTranslationWord(null)
@@ -68,11 +70,6 @@ export default function CardStack() {
     bringToFront('hint')
   }
 
-  // -------------------------------------------------------------------------
-  // Animation logic — unchanged behavior, improved motion
-  // Exit card arcs upward with a subtle scale-down (no opacity change).
-  // Deck settles in 300ms instead of 500ms — snappier, less sluggish.
-  // -------------------------------------------------------------------------
   const bringToFront = (targetRole: CardRole) => {
     if (isAnimating || deckOrder[0] === targetRole) return
     setIsAnimating(true)
@@ -90,15 +87,14 @@ export default function CardStack() {
 
   const getCardContent = (role: CardRole): string => {
     switch (role) {
-      case 'german': return localWord ? localWord.de : 'Click GENERATE to start'
-      case 'translation': return translationWord ?? (localWord ? 'Click TRANSLATE to reveal' : '—')
-      case 'hint': return hintWord ?? (localWord ? 'Click HINT to reveal' : '—')
+      case 'german': return localWord ? localWord.de : t.cardPromptGenerate
+      case 'translation': return translationWord ?? (localWord ? t.cardPromptTranslate : '—')
+      case 'hint': return hintWord ?? (localWord ? t.cardPromptHint : '—')
       default: return ''
     }
   }
 
   const getPositionStyles = (role: CardRole) => {
-    // Exiting card: arcs up and scales down slightly — no fade
     if (role === exitingCard) return {
       zIndex: 40,
       transform: 'translateY(-115%) scale(0.9)',
@@ -106,7 +102,7 @@ export default function CardStack() {
     }
     const index = deckOrder.indexOf(role)
     switch (index) {
-      case 0: return { zIndex: 30, transform: 'translateY(0px) scale(1)',    opacity: 1 }
+      case 0: return { zIndex: 30, transform: 'translateY(0px) scale(1)',     opacity: 1 }
       case 1: return { zIndex: 20, transform: 'translateY(16px) scale(0.98)', opacity: 1 }
       case 2: return { zIndex: 10, transform: 'translateY(32px) scale(0.96)', opacity: 1 }
       default: return {}
@@ -131,12 +127,10 @@ export default function CardStack() {
                 ...getPositionStyles(role),
               }}
             >
-              {/* Role label */}
               <span className="absolute top-5 left-5 text-white/40 text-[10px] font-bold uppercase tracking-widest">
                 {ROLE_TITLES[role]}
               </span>
 
-              {/* Card content */}
               <p
                 className={`text-center text-white leading-snug ${
                   role === 'hint'
@@ -147,7 +141,6 @@ export default function CardStack() {
                 {getCardContent(role)}
               </p>
 
-              {/* Decorative icon */}
               <div className="absolute bottom-5 right-5 opacity-10">
                 {role === 'translation' && <Languages size={40} className="text-white" />}
                 {role === 'hint' && <HelpCircle size={40} className="text-white" />}
@@ -160,13 +153,13 @@ export default function CardStack() {
       {/* Action buttons */}
       <div className="flex flex-col gap-3 w-full max-w-xs mx-auto lg:mx-0">
         <button onClick={handleGenerate} className={btnBase}>
-          GENERATE <RefreshCw size={18} strokeWidth={2.5} />
+          {t.generate} <RefreshCw size={18} strokeWidth={2.5} />
         </button>
         <button onClick={handleTranslate} disabled={!localWord} className={`${btnBase} disabled:opacity-30`}>
-          TRANSLATE <Languages size={18} strokeWidth={2.5} />
+          {t.translate} <Languages size={18} strokeWidth={2.5} />
         </button>
         <button onClick={handleHint} disabled={!localWord} className={`${btnBase} disabled:opacity-30`}>
-          HINT <HelpCircle size={18} strokeWidth={2.5} />
+          {t.hint} <HelpCircle size={18} strokeWidth={2.5} />
         </button>
       </div>
 

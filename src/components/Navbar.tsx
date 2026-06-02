@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import { useGameStore } from '../store/useGameStore'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import { translations } from '../i18n/translations'
 import { X, Loader2, LogOut, User, Languages } from 'lucide-react'
 import type { Level } from '../types'
 import { UserRound } from 'lucide-react'
+
 // ---------------------------------------------------------------------------
 // Level Switch Modal
 // ---------------------------------------------------------------------------
@@ -20,22 +22,19 @@ interface LevelSwitchModalProps {
 
 function LevelSwitchModal({ isOpen, targetLevel, onConfirm, onCancel, isLoading }: LevelSwitchModalProps) {
   const [input, setInput] = useState('')
+  const { displayLanguage } = useGameStore()
+  const t = translations[displayLanguage]
   const matches = input === targetLevel
   if (!isOpen || !targetLevel) return null
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center px-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm"
         onClick={onCancel}
       />
-
-      {/* Modal card */}
       <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden">
-        {/* Top accent bar */}
         <div className="h-1 w-full bg-linear-to-r from-brand-green via-primary to-brand-green" />
-
         <div className="p-6 space-y-5">
           <button
             onClick={onCancel}
@@ -44,27 +43,25 @@ function LevelSwitchModal({ isOpen, targetLevel, onConfirm, onCancel, isLoading 
             <X size={16} strokeWidth={2.5} />
           </button>
 
-          {/* Heading */}
           <div>
             <p className="text-[10px] uppercase tracking-[0.2em] text-brand-green font-semibold mb-1">
-              Level Switch
+              {t.levelSwitch}
             </p>
             <h2 className="text-xl font-bold text-brand-dark">
-              Switch to {targetLevel}?
+              {t.switchToLevel(targetLevel)}
             </h2>
             <p className="mt-1.5 text-sm text-gray-500 leading-relaxed">
-              All current progress, stats, and position will be permanently reset. This cannot be undone.
+              {t.levelSwitchWarning}
             </p>
           </div>
 
-          {/* Confirmation input */}
           <div className="space-y-2">
             <p className="text-xs text-gray-400">
-              Type{' '}
+              {t.typeToConfirm}{' '}
               <span className="font-mono font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
                 {targetLevel}
               </span>{' '}
-              to confirm
+              {t.toConfirm}
             </p>
             <input
               key={targetLevel ?? 'closed'}
@@ -77,13 +74,12 @@ function LevelSwitchModal({ isOpen, targetLevel, onConfirm, onCancel, isLoading 
             />
           </div>
 
-          {/* Actions */}
           <div className="flex gap-2 pt-1">
             <button
               onClick={onCancel}
               className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t.cancel}
             </button>
             <button
               onClick={() => { if (matches) onConfirm() }}
@@ -92,7 +88,7 @@ function LevelSwitchModal({ isOpen, targetLevel, onConfirm, onCancel, isLoading 
             >
               {isLoading
                 ? <Loader2 size={14} className="animate-spin" />
-                : `Switch to ${targetLevel}`
+                : `${t.switchTo} ${targetLevel}`
               }
             </button>
           </div>
@@ -114,6 +110,7 @@ export default function Navbar() {
 
   const { user, signOut } = useAuth()
   const { currentLevel, setLevel, displayLanguage, toggleLanguage } = useGameStore()
+  const t = translations[displayLanguage]
   const userInitial = user?.email?.[0]?.toUpperCase() || 'U'
 
   useEffect(() => {
@@ -166,27 +163,21 @@ export default function Navbar() {
         isLoading={isSwitching}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* MOBILE — Static logo                                               */}
-      {/* ----------------------------------------------------------------- */}
+      {/* MOBILE — Static logo */}
       <div className="md:hidden flex justify-center pt-10">
         <Link to="/">
           <img src="/logo.svg" alt="DEUKA" className="h-6" />
         </Link>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* DESKTOP NAV                                                        */}
-      {/* ----------------------------------------------------------------- */}
+      {/* DESKTOP NAV */}
       <nav className="hidden md:block sticky top-0 z-50 px-10 py-0 border-b border-black/6 bg-white/90 backdrop-blur-md shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
         <div className="w-full max-w-7xl mx-auto flex justify-between items-center h-14">
 
-          {/* Logo */}
           <Link to="/" onClick={() => setIsProfileOpen(false)} className="flex items-center">
             <img src="/logo.svg" alt="DEUKA" className="h-5" />
           </Link>
 
-          {/* Level switcher — pill group */}
           <div className="flex items-center gap-0.5 bg-app-bg rounded-xl p-1">
             {(['A1', 'A2', 'B1', 'B2'] as Level[]).map((lvl) => (
               <button
@@ -201,7 +192,6 @@ export default function Navbar() {
                 `}
               >
                 {lvl}
-                {/* Active dot indicator */}
                 {currentLevel === lvl && (
                   <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-primary" />
                 )}
@@ -209,7 +199,6 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Profile avatar + dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -223,14 +212,11 @@ export default function Navbar() {
               {userInitial}
             </button>
 
-            {/* Dropdown */}
             {isProfileOpen && (
-              <div className="absolute right-0 mt-3 w-60 bg-white border border-black/8 rounded-2xl shadow-xl py-2 overflow-hidden">
-
-                {/* Account header */}
+              <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-3 w-60 bg-white border border-black/8 rounded-2xl shadow-xl py-2 overflow-hidden">
                 <div className="px-4 py-3">
                   <p className="text-[9px] uppercase tracking-[0.18em] text-gray-400 font-semibold">
-                    Signed in as
+                    {t.signedInAs}
                   </p>
                   <p className="mt-0.5 text-sm font-semibold truncate text-brand-dark">
                     {user?.email}
@@ -239,22 +225,20 @@ export default function Navbar() {
 
                 <div className="h-px bg-black/6 mx-3" />
 
-                {/* Nav links */}
                 <Link
                   to="/profile"
                   onClick={() => setIsProfileOpen(false)}
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-app-bg hover:text-brand-dark transition-colors"
                 >
                   <User size={14} className="text-gray-400" />
-                  Profile
+                  {t.profile}
                 </Link>
 
                 <div className="h-px bg-black/6 mx-3" />
 
-                {/* Settings block */}
                 <div className="px-4 py-3">
                   <p className="text-[9px] uppercase tracking-[0.18em] text-gray-400 font-semibold mb-2.5">
-                    Settings
+                    {t.language}
                   </p>
                   <button
                     onClick={() => { toggleLanguage(); setIsProfileOpen(false) }}
@@ -262,11 +246,9 @@ export default function Navbar() {
                   >
                     <span className="flex items-center gap-2.5 text-sm text-gray-600 group-hover:text-brand-dark transition-colors">
                       <Languages size={14} className="text-gray-400" />
-                      Language
+                      {t.interfaceLanguage}
                     </span>
-                    <span
-                      className="bg-app-bg text-brand-green px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wider"
-                    >
+                    <span className="bg-app-bg text-brand-green px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wider">
                       {displayLanguage === 'en' ? 'EN' : 'AR'}
                     </span>
                   </button>
@@ -274,13 +256,12 @@ export default function Navbar() {
 
                 <div className="h-px bg-black/6 mx-3" />
 
-                {/* Logout */}
                 <button
                   onClick={() => signOut()}
                   className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors font-medium cursor-pointer"
                 >
                   <LogOut size={14} />
-                  Sign out
+                  {t.signOut}
                 </button>
               </div>
             )}
@@ -288,14 +269,11 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* MOBILE — Floating bottom dock                                      */}
-      {/* ----------------------------------------------------------------- */}
+      {/* MOBILE — Floating bottom dock */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50">
         <div className="relative overflow-visible bg-white border-t border-black/7 shadow-deuka-up px-6 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="flex items-center justify-center gap-8">
 
-            {/* Left levels */}
             <div className="flex gap-5">
               {(['A1', 'A2'] as Level[]).map((lvl) => (
                 <button
@@ -314,14 +292,12 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Floating avatar */}
             <Link to="/profile" className="-mt-15">
               <div className="w-14 h-14 rounded-full bg-nav-avatar-bg flex items-center justify-center shadow-deuka-up active:scale-90 transition-transform border-2 border-white">
                 <UserRound size={26} strokeWidth={2.5} className="text-nav-avatar-icon mx-auto" />
               </div>
             </Link>
 
-            {/* Right levels */}
             <div className="flex gap-5">
               {(['B1', 'B2'] as Level[]).map((lvl) => (
                 <button
