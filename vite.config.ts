@@ -19,6 +19,10 @@ export default defineConfig({
         display: 'standalone',
         scope: '/',
         start_url: '/',
+        // This directs the OS to route matching links directly into the PWA window
+        launch_handler: {
+          client_mode: 'navigate-existing'
+        },
         icons: [
           {
             src: 'icons/icon-192.png',
