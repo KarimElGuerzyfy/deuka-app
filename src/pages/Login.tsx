@@ -85,7 +85,7 @@ export default function Login() {
           {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
         </div>
 
-        <Link to="/forgot-password" className="block text-blue-600 text-sm font-medium hover:underline">
+        <Link to="/auth/forgot-password" className="block text-blue-600 text-sm font-medium hover:underline">
           Forgotten your password?
         </Link>
 
