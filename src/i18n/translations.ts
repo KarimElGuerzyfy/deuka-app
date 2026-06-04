@@ -30,6 +30,10 @@ export const translations = {
     level: 'Level',
     centurion: 'Centurion',
     bucket: 'Bucket',
+    installApp: 'Install App',
+    installAppSubtitle: 'Add DEUKA to your home screen for the best experience.',
+    installIosHint: 'Tap the share button then "Add to Home Screen"',
+    dismiss: 'Later',
 
     // Quiz Screen
     whatDoesThisMean: 'What does this mean?',
@@ -107,6 +111,11 @@ export const translations = {
     level: 'المستوى',
     centurion: 'المئة',
     bucket: 'المجموعة',
+    installApp: 'تثبيت التطبيق',
+    installAppSubtitle: 'أضف DEUKA إلى شاشتك الرئيسية للحصول على أفضل تجربة.',
+    installIosHint: 'اضغط على زر المشاركة ثم "إضافة إلى الشاشة الرئيسية"',
+    dismiss: 'لاحقاً',
+
     // Quiz Screen
     whatDoesThisMean: 'ما معنى هذه الكلمة؟',
     question: 'سؤال',
