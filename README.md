@@ -4,6 +4,8 @@
 
 DEUKA is a structured German vocabulary app for serious learners. It enforces genuine retention through a strict progression architecture called the **Centurion System** — a three-tier curriculum of Levels, Centurions, and Buckets that requires a perfect 10/10 quiz score to advance every 10 words. No shortcuts. No skipping. Every word is earned.
 
+**Live:** [deuka.app](https://deuka.app) · **Repo:** [github.com/KarimElGuerzyfy/deuka-app](https://github.com/KarimElGuerzyfy/deuka-app)
+
 ---
 
 ## Table of Contents
@@ -23,7 +25,7 @@ DEUKA is a structured German vocabulary app for serious learners. It enforces ge
 
 ## Overview
 
-DEUKA covers A1 through B2 level German vocabulary — approximately 4,500 words — organized into a three-tier hierarchy. The app is designed for learners who are serious about retention, not just exposure. It is built as a portfolio project demonstrating production-quality thinking across the full stack: architecture decisions, state management, authentication, database design, and UI/UX.
+DEUKA covers A1 through B2 level German vocabulary — approximately 4,500 words — organized into a three-tier hierarchy. The app is designed for learners who are serious about retention, not just exposure. It is built as a portfolio project demonstrating production-quality thinking across the full stack: architecture decisions, state management, authentication, database design, PWA conversion, and UI/UX.
 
 ---
 
@@ -36,6 +38,8 @@ DEUKA covers A1 through B2 level German vocabulary — approximately 4,500 words
 **Mobile**
 
 ![Learning Mobile](./docs/screenshots/learning-mobile.png)
+
+---
 
 ## The Centurion System
 
@@ -109,6 +113,9 @@ Quiz questions are reshuffled on every attempt. If a user fails and retries, the
 | State | Zustand | Lightweight global state — no boilerplate, easy to sync with Supabase |
 | Backend / Auth | Supabase | Managed auth, Postgres database, Edge Functions, and Row Level Security |
 | Form Logic | React Hook Form + Zod | Schema-first validation — error states derived from the schema, not managed manually |
+| PWA | vite-plugin-pwa + Workbox | Installable on Android and iOS, offline-capable, auto-updating service worker |
+| Email | Resend | Custom SMTP for transactional auth emails sent from `noreply@deuka.app` |
+| Domain | deuka.app (Porkbun) | Custom domain with DNS-verified email sending and Porkbun email forwarding |
 
 ---
 
@@ -128,15 +135,21 @@ src/
 ├── hooks/
 │   ├── useAuth.tsx            # Supabase auth + async profile hydration
 │   └── useQuizEngine.ts       # Quiz state machine — timer, answers, navigation
+├── i18n/
+│   └── translations.ts        # Full EN/AR translation object for all UI strings
 ├── layouts/
 │   ├── AppLayout.tsx          # Authenticated shell with Navbar
-│   └── AuthLayout.tsx         # Public shell for login / register
+│   └── AuthLayout.tsx         # Public shell for login / register / forgot password
 ├── lib/
 │   └── supabase.ts            # Supabase client initialization
 ├── pages/
-│   ├── Learning.tsx           # Primary learning screen
+│   ├── Learning.tsx           # Primary learning screen with PWA install banner
 │   ├── Quiz.tsx               # Quiz gate screen
-│   └── Profile.tsx            # User profile, stats, and settings
+│   ├── Profile.tsx            # User profile, stats, and settings
+│   ├── Login.tsx              # Login form
+│   ├── Register.tsx           # Registration form
+│   ├── ForgotPassword.tsx     # Password reset request
+│   └── ResetPassword.tsx      # New password entry (token from email)
 ├── router/
 │   └── index.tsx              # Centralized route configuration
 ├── services/
@@ -145,6 +158,19 @@ src/
 ├── store/
 │   └── useGameStore.ts        # Zustand store — all app state and actions
 └── types/                     # Shared TypeScript type definitions
+public/
+└── icons/
+    ├── icon-192.png           # PWA icon (Android)
+    ├── icon-512.png           # PWA icon (splash screen)
+    └── icon-180.png           # Apple touch icon (iOS)
+supabase/
+└── functions/
+    ├── delete-account/        # Deletes auth user via service role key
+    ├── block-demo-password-change/  # Blocks password changes on demo account
+    └── _shared/
+        └── cors.ts
+vercel.json                    # SPA rewrite rule
+vite.config.ts                 # Vite + PWA manifest + Workbox config
 ```
 
 ---
@@ -198,9 +224,33 @@ Session management uses a single `onAuthStateChange` listener as the source of t
 
 After encountering persistent deadlocks when using the Supabase JS client inside the auth listener context, profile read and write operations were switched to direct `fetch` calls with explicit auth headers. This bypasses the client's internal locking mechanism while retaining full RLS enforcement at the database level.
 
-### Supabase Edge Function for account deletion
+### Supabase Edge Functions for sensitive operations
 
-Deleting a user requires the Supabase service role key, which cannot be exposed to the client. A dedicated Edge Function handles account deletion — it uses the user's JWT to delete the profile row (RLS-enforced), then uses the service role key to delete the auth user. This keeps the service key server-side where it belongs.
+Two Edge Functions handle operations that require elevated privileges:
+
+**`delete-account`** — Deleting a user requires the Supabase service role key, which cannot be exposed to the client. The function uses the user's JWT to delete the profile row (RLS-enforced), then uses the service role key to delete the auth user.
+
+**`block-demo-password-change`** — The demo account (`demo@deuka.app`) is protected from password changes by checking the authenticated user's ID server-side before allowing a password update to proceed. The demo account UID is hardcoded in the function — no client-side logic can bypass it.
+
+### PWA over native app
+
+DEUKA is distributed as a Progressive Web App rather than a native iOS/Android application. This decision was deliberate: no app store fees, no separate codebase, installable directly from the browser on both platforms. The same codebase that runs in the browser installs as a standalone app. If store presence becomes valuable after user acquisition, the existing PWA can be wrapped with Capacitor with minimal changes.
+
+### PWA deep linking via `launch_handler`
+
+Auth confirmation links sent by email redirect to `https://deuka.app/auth/...`. On Android, the `launch_handler: { client_mode: 'navigate-existing' }` manifest property instructs the OS to route these links directly into the installed PWA window rather than opening a browser tab. Users who have installed DEUKA complete their auth flow inside the app, not a detached browser session.
+
+### Workbox NetworkOnly for Supabase
+
+The service worker is configured with a `NetworkOnly` rule for all Supabase URLs. Auth tokens, profile data, and quiz state must always come from the network — serving stale auth responses from cache would produce silent session failures. All other assets (JS, CSS, icons) are cached normally for offline support.
+
+### Custom email infrastructure
+
+Auth emails (signup confirmation, password reset) are sent from `noreply@deuka.app` via Resend's SMTP relay. The sending subdomain `deuka.app` is DNS-verified in Resend with DKIM, SPF, and DMARC records. This eliminates Supabase's default rate-limited email service and gives DEUKA a professional sender identity. Supabase email templates are fully customized with DEUKA branding.
+
+### RTL and Arabic UI via `subscribeWithSelector`
+
+The Arabic UI is not a separate layout — it is the same component tree with direction and language toggled reactively. `document.documentElement.dir` and `document.documentElement.lang` are set by a Zustand subscriber that fires immediately on mount and on every language toggle. This approach keeps the component tree clean and ensures the correct direction is applied before the first render, with no flash of LTR content.
 
 ---
 
@@ -287,6 +337,13 @@ create trigger on_auth_user_created
   for each row execute procedure handle_new_user();
 ```
 
+### Edge Function Deployment
+
+```bash
+npx supabase functions deploy delete-account
+npx supabase functions deploy block-demo-password-change
+```
+
 ---
 
 ## Build Status
@@ -300,9 +357,14 @@ create trigger on_auth_user_created
 | 5 | Internationalization — EN/AR language toggle | ✅ Complete |
 | 6 | Quiz Gate — timer, distractors, fail/pass flow | ✅ Complete |
 | 7 | Supabase — progress persistence, profile sync, account deletion | ✅ Complete |
-| 8 | Polish — responsive design, deploy to Vercel | 🔲 In Progress |
+| 8 | Polish — responsive design, screenshots, deploy to Vercel | ✅ Complete |
 | 9 | Vocabulary data — full A1–B2 word lists (EN + AR) | ✅ Complete |
-| 10 | Arabic UI — full RTL layout and Arabic-first mode | 🔲 Coming Next |
+| 10 | Arabic UI — full RTL layout, Cairo font, reactive direction switching | ✅ Complete |
+| 11 | PWA — installable, offline-capable, auto-updating, install banner | ✅ Complete |
+| 12 | Custom domain — deuka.app, SSL, Vercel DNS | ✅ Complete |
+| 13 | Email infrastructure — Resend SMTP, custom templates, noreply@deuka.app | ✅ Complete |
+| 14 | Auth flows — forgot password, reset password pages | ✅ Complete |
+| 15 | Demo account — protected from password changes via Edge Function | ✅ Complete |
 
 ---
 
@@ -326,9 +388,18 @@ Recognising when a technical behaviour aligns with product intent, and choosing 
 
 ---
 
-## Coming Next
+## Known Constraints & Gotchas
 
-The groundwork for Arabic-first mode is already in place — EN/AR language toggle, RTL layout foundations, and Arabic translations across the full A1–B2 dataset. The next update will ship a full Arabic UI: RTL layout throughout, Arabic as the primary display language, and the app fully usable for Arabic-speaking German learners without switching to English.
+- **React Compiler is enabled** — do not use manual `useCallback` or `useMemo` except where `Math.random()` is involved.
+- **No `localStorage` / Zustand `persist`** — Supabase is the single source of truth.
+- **`profileService` uses direct `fetch`** — not the Supabase JS client. Do not switch back.
+- **Single `onAuthStateChange` listener** — do not add a competing `getSession()` call.
+- **Word ID prefix matching** — never reconstruct ID prefixes from store indices. Always compare against actual word IDs from `vocabularyService.getBucket()`.
+- **Vercel SPA routing** — `vercel.json` rewrite rule is required. Without it, direct navigation to any route returns 404.
+- **Escaped apostrophes in data files** — `\'` inside single-quoted strings passes `tsc` but breaks the browser ES module parser. Use double quotes for any string containing an apostrophe.
+- **PWA only testable on production** — manifest and service worker require HTTPS + real domain.
+- **`beforeinstallprompt` Android only** — iOS has no programmatic install prompt.
+- **Translations `as const` removed** — required for TypeScript to accept EN/AR as the same type shape.
 
 ---
 
