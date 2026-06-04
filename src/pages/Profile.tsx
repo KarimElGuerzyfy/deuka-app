@@ -122,6 +122,11 @@ export default function Profile() {
       if (nameError) throw nameError;
       if (password) {
         if (password !== confirmPassword) throw new Error('Passwords do not match');
+        // Check if demo account before allowing password change
+        const { data, error: blockError } = await supabase.functions.invoke('block-demo-password-change');
+        if (blockError || data?.error) {
+          throw new Error(data?.error ?? 'Password changes are not allowed for this account.');
+        }
         const { error: passwordError } = await supabase.auth.updateUser({ password });
         if (passwordError) throw passwordError;
         setPassword('');
