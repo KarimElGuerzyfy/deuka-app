@@ -22,7 +22,8 @@ export default function Learning() {
 
   const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) &&
     !(window as unknown as { MSStream?: unknown }).MSStream
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+  (navigator as unknown as { standalone?: boolean }).standalone === true
   const alreadyDismissed = !!sessionStorage.getItem('install-dismissed')
 
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
