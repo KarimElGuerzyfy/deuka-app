@@ -4,6 +4,8 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import { useGameStore } from './store/useGameStore';
 import './index.css';
+import { inject } from '@vercel/analytics';
+inject();
 
 // Keep document direction in sync with the store
 useGameStore.subscribe(
