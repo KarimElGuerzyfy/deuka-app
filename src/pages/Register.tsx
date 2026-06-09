@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const registerSchema = z.object({
@@ -20,6 +21,8 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -99,26 +102,36 @@ export default function Register() {
         {/* Password */}
         <div>
           <label htmlFor="password" className="block text-sm font-medium mb-1 text-brand-dark">Password *</label>
-          <input 
-            {...register('password')}
-            id="password"
-            type="password" 
-            autoComplete="new-password"
-            className="w-full p-2 border border-brand-dark/48 rounded-lg focus:ring-1 focus:ring-brand-dark outline-none transition" 
-          />
+          <div className="relative">
+            <input 
+              {...register('password')}
+              id="password"
+              type={showPassword ? 'text' : 'password'} 
+              autoComplete="new-password"
+              className="w-full p-2 pr-9 border border-brand-dark/48 rounded-lg focus:ring-1 focus:ring-brand-dark outline-none transition" 
+            />
+            <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
           {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
         </div>
 
         {/* Confirm Password */}
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1 text-brand-dark">Confirm Password *</label>
-          <input 
-            {...register('confirmPassword')}
-            id="confirmPassword"
-            type="password" 
-            autoComplete="new-password"
-            className="w-full p-2 border border-brand-dark/48 rounded-lg focus:ring-1 focus:ring-brand-dark outline-none transition" 
-          />
+          <div className="relative">
+            <input 
+              {...register('confirmPassword')}
+              id="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'} 
+              autoComplete="new-password"
+              className="w-full p-2 pr-9 border border-brand-dark/48 rounded-lg focus:ring-1 focus:ring-brand-dark outline-none transition" 
+            />
+            <button type="button" onClick={() => setShowConfirmPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
           {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword.message}</p>}
         </div>
 
