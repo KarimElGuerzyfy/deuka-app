@@ -18,6 +18,7 @@ DEUKA is a structured German vocabulary app for serious learners. It enforces ge
 - [Data Model](#data-model)
 - [Key Design Decisions](#key-design-decisions)
 - [Getting Started](#getting-started)
+- [Running Tests](#running-tests)
 - [Build Status](#build-status)
 - [A Bug That Became a Feature](#a-bug-that-became-a-feature)
 
@@ -116,6 +117,7 @@ Quiz questions are reshuffled on every attempt. If a user fails and retries, the
 | PWA | vite-plugin-pwa + Workbox | Installable on Android and iOS, offline-capable, auto-updating service worker |
 | Email | Resend | Custom SMTP for transactional auth emails sent from `noreply@deuka.app` |
 | Domain | deuka.app (Porkbun) | Custom domain with DNS-verified email sending and Porkbun email forwarding |
+| Testing | Vitest | Unit tests for core logic — vocabulary service, quiz generation, state management |
 
 ---
 
@@ -157,6 +159,8 @@ src/
 │   └── profileService.ts      # loadProfile, saveProfile — Supabase sync
 ├── store/
 │   └── useGameStore.ts        # Zustand store — all app state and actions
+├── tests/
+│   └── vocabularyService.test.ts  # 18 unit tests — vocabulary, quiz, state
 └── types/                     # Shared TypeScript type definitions
 public/
 └── icons/
@@ -248,9 +252,9 @@ The service worker is configured with a `NetworkOnly` rule for all Supabase URLs
 
 Auth emails (signup confirmation, password reset) are sent from `noreply@deuka.app` via Resend's SMTP relay. The sending subdomain `deuka.app` is DNS-verified in Resend with DKIM, SPF, and DMARC records. This eliminates Supabase's default rate-limited email service and gives DEUKA a professional sender identity. Supabase email templates are fully customized with DEUKA branding.
 
-### RTL and Arabic UI via `subscribeWithSelector`
+### Full Arabic UI with RTL support
 
-The Arabic UI is not a separate layout — it is the same component tree with direction and language toggled reactively. `document.documentElement.dir` and `document.documentElement.lang` are set by a Zustand subscriber that fires immediately on mount and on every language toggle. This approach keeps the component tree clean and ensures the correct direction is applied before the first render, with no flash of LTR content.
+DEUKA is fully bilingual — English and Arabic — with complete UI translation and RTL layout switching. The Arabic UI is not a separate layout; it is the same component tree with direction and language toggled reactively. `document.documentElement.dir` and `document.documentElement.lang` are set by a Zustand subscriber that fires immediately on mount and on every language toggle, ensuring the correct direction is applied before the first render with no flash of LTR content. Cairo font is loaded for Arabic; Figtree handles Latin script. All 4,500 words include Arabic translations, making DEUKA fully usable as an Arabic-native learning app.
 
 ---
 
@@ -287,6 +291,17 @@ VITE_SUPABASE_ANON_KEY=your_anon_key
 # Start the development server
 npm run dev
 ```
+
+### Try the Demo
+
+A read-only demo account is available to explore the app without registering:
+
+```
+Email:    demo@deuka.app
+Password: Demo1234
+```
+
+The demo account cannot change its password (enforced server-side via Edge Function).
 
 ### Database Setup
 
@@ -346,6 +361,22 @@ npx supabase functions deploy block-demo-password-change
 
 ---
 
+## Running Tests
+
+```bash
+npx vitest run src/tests/vocabularyService.test.ts
+```
+
+18 unit tests covering:
+
+- `vocabularyService.getBucket` — valid bucket retrieval, word shape, ID coordinate format, A2 index offsets, invalid coordinate handling
+- `getDistractors` — 4 unique options per question, correct answer always present, no duplicates
+- Language toggle state — initial language, `en` ↔ `ar` switching, RTL derivation
+
+All 18 tests pass against the production codebase.
+
+---
+
 ## Build Status
 
 | Phase | Description | Status |
@@ -365,6 +396,7 @@ npx supabase functions deploy block-demo-password-change
 | 13 | Email infrastructure — Resend SMTP, custom templates, noreply@deuka.app | ✅ Complete |
 | 14 | Auth flows — forgot password, reset password pages | ✅ Complete |
 | 15 | Demo account — protected from password changes via Edge Function | ✅ Complete |
+| 16 | Unit tests — 18 passing tests via Vitest | ✅ Complete |
 
 ---
 
