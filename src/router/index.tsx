@@ -9,8 +9,13 @@ import Login from '../pages/Login'
 import Register from '../pages/Register'
 import ForgotPassword from '../pages/ForgotPassword'
 import ResetPassword from '../pages/ResetPassword'
+import Demo from '../pages/Demo'
 
 export const router = createBrowserRouter([
+  {
+    path: '/demo',
+    element: <Demo />,
+  },
   {
     path: '/',
     element: <AppLayout />,
