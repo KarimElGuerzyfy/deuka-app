@@ -8,7 +8,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://portfolio-os-eta-sepia.vercel.app"
+          "value": "frame-ancestors 'self' https://portfolio-os-eta-sepia.vercel.app http://localhost:3000"
         }
       ]
     }
